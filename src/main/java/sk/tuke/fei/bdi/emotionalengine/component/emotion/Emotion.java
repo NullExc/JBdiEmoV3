@@ -1,15 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotion;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   06. 12. 2012
-   12:39 PM
-
-*/
 
 import sk.tuke.fei.bdi.emotionalengine.component.JadexBeliefChangeDetectionSupport;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.calculators.Calculator;
@@ -22,6 +12,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
 
@@ -83,10 +77,10 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
     }
 
     /**
-     * Set new emotion intensity value.
-     * Method is called by new emotional intensity value
+     * Set new emotion intensity element.
+     * Method is called by new emotional intensity element
      * calculation. Method ensures trimming
-     * of value so it belongs to <0,1> interval.
+     * of element so it belongs to <0,1> interval.
      * Method fireBeliefChange() from JadexBeliefChangeDetectionSupport
      * class is called to notify Jadex that Engine belief
      * was changed.
@@ -188,13 +182,13 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
                     // Get calculator
                     Calculator calculator = userParameterValueCalculators.get(parameterKey);
 
-                    // Get original emotional event parameter value
+                    // Get original emotional event parameter element
                     Double eventParameterValue = eventUserParameters.get(parameterKey);
 
-                    // Calculate new emotional event parameter value by using calculator
+                    // Calculate new emotional event parameter element by using calculator
                     Double newEventParameterValue = calculator.calculateValue(eventParameterValue);
 
-                    // Assign new emotional event parameter value back to emotional event for intensity calculation
+                    // Assign new emotional event parameter element back to emotional event for intensity calculation
                     eventUserParameters.put(parameterKey, newEventParameterValue);
 
                 }
@@ -228,13 +222,13 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
                     // Get calculator
                     Calculator calculator = systemParameterValueCalculators.get(parameterKey);
 
-                    // Get original emotional event parameter value
+                    // Get original emotional event parameter element
                     Double eventParameterValue = eventSystemParameters.get(parameterKey);
 
-                    // Calculate new emotional event parameter value by using calculator
+                    // Calculate new emotional event parameter element by using calculator
                     Double newEventParameterValue = calculator.calculateValue(eventParameterValue);
 
-                    // Assign new emotional event parameter value back to emotional event for intensity calculation
+                    // Assign new emotional event parameter element back to emotional event for intensity calculation
                     eventSystemParameters.put(parameterKey, newEventParameterValue);
 
                 }
@@ -252,8 +246,8 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
      * 2. deep copy emotional event (to independently perform possible parameter calculations)
      * 3. calculate user parameter values
      * 4. calculate system parameter values
-     * 5. calculate new emotional intensity value
-     * 6. update emotions decay source with this new intensity value
+     * 5. calculate new emotional intensity element
+     * 6. update emotions decay source with this new intensity element
      *
      * @param event emotional event
      */
@@ -295,7 +289,7 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
      * Method periodically called by Engine. Decays emotion's intensity
      * along parametrized inverse sigmoid function. Decay steps
      * parameter represents number of method calls needed for intensity
-     * to drop to negligible value
+     * to drop to negligible element
      *
      * @param decaySteps parameter of inverse sigmoid function
      */
@@ -303,7 +297,7 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
 
         // Shifted inverse sigmoid function
         // Coefficients to shape function so it starts at (x = 0 -> y = caa 0.993)
-        // and requires specified number of steps (decaySteps) (x value) where (y = cca 0.003)
+        // and requires specified number of steps (decaySteps) (x element) where (y = cca 0.003)
         double coef1 = 0.5 * decaySteps;
         double coef2 = 0.1 * decaySteps;
 
@@ -325,8 +319,8 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
     /**
      * Abstract method implemented by all specific emotions (e.g. FEAR, HOPE).
      * Specific implementations contain formula for new emotional intensity
-     * value calculation (is calculated from emotional event adjusted parameters).
-     * Intensity is set by calling of method (setIntensity()) not by return value.
+     * element calculation (is calculated from emotional event adjusted parameters).
+     * Intensity is set by calling of method (setIntensity()) not by return element.
      *
      * @param event local copy of emotional event (deepCopy())
      */

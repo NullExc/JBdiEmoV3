@@ -1,17 +1,11 @@
 package sk.tuke.fei.bdi.emotionalengine.helper;
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   03. 02. 2013
-   12:58 AM
-
-*/
 
 import java.util.HashSet;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class MyMath {
 

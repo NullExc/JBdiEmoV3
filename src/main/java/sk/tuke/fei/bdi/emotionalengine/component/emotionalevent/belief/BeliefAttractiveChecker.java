@@ -4,8 +4,9 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventChecker;
 
 /**
- * Created by Peter on 26.3.2017.
+ * @author Tomáš Herich
  */
+
 public class BeliefAttractiveChecker implements EmotionalEventChecker {
 
     public boolean checkEmotionalEvent(EmotionalEvent event) {

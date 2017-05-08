@@ -1,17 +1,10 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotion.mood;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   24. 02. 2013
-   1:24 PM
-
-*/
-
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public abstract class Mood {
 

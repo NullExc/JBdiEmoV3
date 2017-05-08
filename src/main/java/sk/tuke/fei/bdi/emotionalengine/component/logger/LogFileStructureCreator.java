@@ -1,10 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.component.logger;
 
-/**
- * Created by Peter on 22.3.2017.
- */
-
-
 import javanet.staxutils.IndentingXMLStreamWriter;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -17,6 +12,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class LogFileStructureCreator {
 

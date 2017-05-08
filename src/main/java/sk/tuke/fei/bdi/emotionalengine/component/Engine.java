@@ -1,17 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.component;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   30. 10. 2012
-   5:06 PM
-
-*/
-
-
 import jadex.bridge.IComponentIdentifier;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Mood;
@@ -23,6 +11,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class Engine extends JadexBeliefChangeDetectionSupport implements Runnable{
 
@@ -101,7 +93,7 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
         // Iterate elements
         for (Element element : elements) {
 
-            // Get element emotions
+            // Get objectValue emotions
             Set<Emotion> emotions = element.getEmotions();
 
             // Iterate emotions
@@ -132,11 +124,11 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Add element to engine
+     * Add objectValue to engine
      *
-     * @param name element name (e.g. test_goal) as specified in ADF
+     * @param name objectValue name (e.g. test_goal) as specified in ADF
      *             for every emotional goal, plan or belief
-     * @param type element type specified in R (e.g. R.GOAL)
+     * @param type objectValue type specified in R (e.g. R.GOAL)
      */
     public void addElement(String name, int type) {
 
@@ -154,12 +146,12 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Add belief set belief element to engine
+     * Add belief set belief objectValue to engine
      * (overloaded method with additional parameter)
      *
-     * @param name element name (e.g. test_goal) as specified in ADF
+     * @param name objectValue name (e.g. test_goal) as specified in ADF
      *             for every emotional goal, plan or belief
-     * @param type element type specified in R (e.g. R.GOAL)
+     * @param type objectValue type specified in R (e.g. R.GOAL)
      * @param parentBeliefSetName name of belief set to which belief belongs
      */
     public void addElement(String name, int type, String parentBeliefSetName) {
@@ -179,14 +171,14 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Get element specified by its name and type.
+     * Get objectValue specified by its name and type.
      * Element can be goal, plan or belief mapped from
      * agent ADF.
      *
      *
-     * @param name element name (e.g. test_goal) as specified in ADF
+     * @param name objectValue name (e.g. test_goal) as specified in ADF
      *             for every emotional goal, plan or belief
-     * @param type element type specified in R (e.g. R.GOAL)
+     * @param type objectValue type specified in R (e.g. R.GOAL)
      * @return Element instance
      */
     public Element getElement(String name, int type) {
@@ -207,12 +199,12 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Remove element from engine
+     * Remove objectValue from engine
      *
-     * @param name  element name (e.g. test_goal) as specified in ADF
+     * @param name  objectValue name (e.g. test_goal) as specified in ADF
      *              for every emotional goal, plan or belief
-     * @param type  element type specified in R (e.g. R.GOAL)
-     * @return true if element was removed
+     * @param type  objectValue type specified in R (e.g. R.GOAL)
+     * @return true if objectValue was removed
      */
     public boolean removeElement(String name, int type) {
 
@@ -237,12 +229,12 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Check if engine contains element
+     * Check if engine contains objectValue
      *
-     * @param name element name (e.g. test_goal) as specified in ADF
+     * @param name objectValue name (e.g. test_goal) as specified in ADF
      *             for every emotional goal, plan or belief
-     * @param type element type specified in R (e.g. R.GOAL)
-     * @return true if engine contains element, otherwise false
+     * @param type objectValue type specified in R (e.g. R.GOAL)
+     * @return true if engine contains objectValue, otherwise false
      */
     public boolean isElement(String name, int type) {
 
@@ -263,10 +255,10 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Get all element names of specified type stored in engine
+     * Get all objectValue names of specified type stored in engine
      *
-     * @param type element type specified in R (e.g. R.GOAL)
-     * @return Array of element names
+     * @param type objectValue type specified in R (e.g. R.GOAL)
+     * @return Array of objectValue names
      */
     public String[] getElementsNames(int type) {
 
@@ -293,10 +285,10 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     }
 
     /**
-     * Get all element instances of specified type stored in engine
+     * Get all objectValue instances of specified type stored in engine
      *
-     * @param type element type specified in R (e.g. R.GOAL)
-     * @return Array of element instances
+     * @param type objectValue type specified in R (e.g. R.GOAL)
+     * @return Array of objectValue instances
      */
     public Element[] getElements(int type) {
 
@@ -328,7 +320,7 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     /**
      * Set engine as initialized
      *
-     * @param initialized boolean value of engine being initialized
+     * @param initialized boolean objectValue of engine being initialized
      */
     public void setInitialized(boolean initialized) {
         isInitialized = initialized;

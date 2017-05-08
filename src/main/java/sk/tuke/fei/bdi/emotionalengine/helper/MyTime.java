@@ -1,18 +1,11 @@
 package sk.tuke.fei.bdi.emotionalengine.helper;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   18. 02. 2013
-   11:32 PM
-
-*/
-
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class MyTime {
 

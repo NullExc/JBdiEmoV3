@@ -1,22 +1,14 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotionalevent;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   24. 01. 2013
-   5:14 PM
-
-*/
-
-
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class EmotionalEvent {
 
@@ -99,7 +91,7 @@ public class EmotionalEvent {
         System.out.println("");
         System.out.println("----- EMOTIONAL EVENT -----");
         System.out.println("");
-        System.out.println("element: " + elementName);
+        System.out.println("objectValue: " + elementName);
         System.out.println("event type: " + R.EMOTIONAL_EVENT_TYPE_NAMES.get(eventType));
         System.out.println("result type: " + R.EMOTIONAL_RESULT_TYPE_NAMES.get(resultType));
         System.out.println("");
