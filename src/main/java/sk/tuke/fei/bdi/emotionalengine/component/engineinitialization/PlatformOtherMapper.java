@@ -17,27 +17,26 @@ import sk.tuke.fei.bdi.emotionalengine.plan.InitializeEmotionalEnginePlan;
 */
 
 import jadex.bridge.IComponentIdentifier;
-import jadex.bridge.service.RequiredServiceInfo;
-import jadex.bridge.service.search.SServiceProvider;
 import jadex.bridge.service.types.cms.IComponentManagementService;
 import jadex.commons.future.IFuture;
-import jadex.commons.future.ThreadSuspendable;
-import sk.tuke.fei.bdi.emotionalengine.starter.JadexStarter;
+import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.util.Set;
 
+/**
+ * @author Tomáš Herich
+ * @author Peter Zemianek
+ */
+
 public class PlatformOtherMapper implements Runnable {
 
-    private IComponentManagementService cms;
     private Engine engine;
     private Set<String> emotionalOtherNames;
-    private InitializeEmotionalEnginePlan parentPlan;
+
     private boolean isRunning = false;
     private final IInternalAccess access;
 
-    public PlatformOtherMapper(Class agent, Engine engine, IInternalAccess access) {
-
-        //this.parentPlan = (InitializeEmotionalEnginePlan) parentPlan;
+    public PlatformOtherMapper(Engine engine, IInternalAccess access) {
         this.engine = engine;
         this.access = access;
 
@@ -49,30 +48,24 @@ public class PlatformOtherMapper implements Runnable {
 
         while (true) {
 
-            // Don't run search before initialize emotional engine plan mapped possible emotional other names
-            if (isRunning) {
+            if (isRunning()) {
 
-                IComponentManagementService cms = (IComponentManagementService) access.getComponentFeature(IRequiredServicesFeature.class).getRequiredService("CMS").get();
+                IComponentManagementService cms = (IComponentManagementService) access.getComponentFeature(IRequiredServicesFeature.class).getRequiredService(R.COMPONENT_SERVICE).get();
 
                 IFuture<IComponentIdentifier[]> identifiersFuture = cms.getComponentIdentifiers();
 
                 IComponentIdentifier[] identifiers = identifiersFuture.get();
 
-                // Remove identifiers stored in emotional engine
                 engine.getEmotionalOtherIds().clear();
 
-                // Iterate identifiers
                 for (IComponentIdentifier cid : identifiers) {
-                    // Get first part of component name (discard platform information)
+
                     String componentName = cid.getLocalName();
-                    //String componentName = cid.getName().split("\\@")[0];
 
                     boolean isComponentEmotionalOther = false;
 
-                    //Test for every emotional other defined as parameter in agent ADF (initialize_emotions_plan)
-                    for (String emotionalOtherName : emotionalOtherNames) {
-                        //Condition that ensures that agent can have emotional others of the same type as himself
-                        //if (componentName.equals(emotionalOtherName)) {
+                    for (String emotionalOtherName : getEmotionalOtherNames()) {
+
                         if (componentName.matches(emotionalOtherName + ".*")) {
                             isComponentEmotionalOther = true;
                         }
@@ -80,11 +73,8 @@ public class PlatformOtherMapper implements Runnable {
 
                     if (isComponentEmotionalOther) {
 
-                        //Condition that ensures that agent will not add himself as emotional other
                         if (!access.getComponentIdentifier().getName().equals(cid.getName()) ) {
 
-                            // Add identifier of emotional other to emotional engine
-                            System.err.println("Adding emotional other cid : " + cid.getLocalName() + " from : " + access.getComponentIdentifier().getLocalName());
                             engine.getEmotionalOtherIds().add(cid);
 
                         }
@@ -92,7 +82,6 @@ public class PlatformOtherMapper implements Runnable {
                 }
             }
 
-            // Check platform for possible emotional other agents every 10 seconds
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {

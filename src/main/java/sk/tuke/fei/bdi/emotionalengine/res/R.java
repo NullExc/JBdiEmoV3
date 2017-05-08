@@ -1,15 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.res;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   07. 12. 2012
-   7:34 PM
-
-*/
 
 
 import java.awt.*;
@@ -17,10 +7,40 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author Peter Zemianek
+ * @author Tomáš Herich
+ */
 public class R {
 
     // -------------------------------------------------------------------------------
-    // Emotional engine, Emotional element types, Emotional event types
+    // Additional JBDIEmo parameters used in v2
+    // -------------------------------------------------------------------------------
+
+    // BDIV2 Services required for emotional agent
+    public final static String MESSAGE_SERVICE = "v2_message_service";
+    public final static String COMPONENT_SERVICE = "v2_CMS";
+
+    // BDIV2 keys for Map represented as emotional message
+    public final static String KEY_MESSAGE_EMOTIONAL_SEND = "key_emotional_message_send";
+    public final static String KEY_MESSAGE_EMOTIONAL_RECEIVE = "key_emotional_message_receive";
+    public final static String KEY_MESSAGE_EMOTIONAL = "key_emotional_message";
+    public final static String KEY_MESSAGE_PLAN = "key_message_plan";
+    public final static String KEY_MESSAGE_RESULT = "key_result";
+    public final static String KEY_SENDER_ID = "key_sender_id";
+    public final static String KEY_PLAN_NAME = "key_plan_name";
+
+    // BDIV2 emotional parameter attribute keys
+    public final static String FIELD = "v2_field_target";
+    public final static String METHOD = "v2_method_target";
+    public final static String SIMPLE_BOOLEAN = "v2_simple_boolean";
+    public final static String SIMPLE_STRING = "v2_simple_string";
+    public final static String SIMPLE_DOUBLE = "v2_simple_double";
+
+    //BDIV2
+
+    // -------------------------------------------------------------------------------
+    // Emotional engine, Emotional objectValue types, Emotional event types
     // -------------------------------------------------------------------------------
 
     // Name of belief storing Emotion engine
@@ -34,14 +54,14 @@ public class R {
     public final static String ENGINE_PARAM_DECAY_STEPS_TO_MIN = "decay_steps_to_min";
     public final static String ENGINE_PARAM_EMOTIONAL_OTHERS = "emotional_others";
 
-    // Emotional element types
+    // Emotional objectValue types
     public final static int PLAN = 1;
     public final static int GOAL = 2;
     public final static int BELIEF = 3;
     public final static int BELIEF_SET = 4;
     public final static int BELIEF_SET_BELIEF = 5;
 
-    // Emotional element type names
+    // Emotional objectValue type names
     public static final Map<Integer, String> EMOTIONAL_ELEMENT_TYPE_NAMES;
     static {
         Map<Integer, String> map = new HashMap<Integer, String>();
@@ -53,7 +73,7 @@ public class R {
         EMOTIONAL_ELEMENT_TYPE_NAMES = Collections.unmodifiableMap(map);
     }
 
-    // Emotional element type long names
+    // Emotional objectValue type long names
     public static final Map<Integer, String> EMOTIONAL_ELEMENT_TYPE_LONG_NAMES;
     static {
         Map<Integer, String> map = new HashMap<Integer, String>();

@@ -1,32 +1,28 @@
 package sk.tuke.fei.bdi.emotionalengine.plan;
 
-/*
 
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   29. 10. 2012
-   9:30 AM
-
-*/
-
-import jadex.bdiv3.annotation.Plan;
-import jadex.bdiv3.annotation.PlanAPI;
-import jadex.bdiv3.annotation.PlanBody;
+import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.runtime.IPlan;
 import jadex.bridge.IInternalAccess;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.Annotations.JBdiEmoAgent;
+import jadex.bridge.component.IArgumentsResultsFeature;
+import jadex.bridge.component.IMonitoringComponentFeature;
+import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.JBDIEmoAgent;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.enginegui.EngineGui;
 import sk.tuke.fei.bdi.emotionalengine.component.engineinitialization.AgentModelMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.engineinitialization.ElementEventMonitor;
 import sk.tuke.fei.bdi.emotionalengine.component.engineinitialization.PlatformOtherMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.logger.EngineLogger;
+import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
+/**
+ * @author Peter Zemianek
+ */
 @Plan
 public class InitializeEmotionalEnginePlan {
 
@@ -36,39 +32,58 @@ public class InitializeEmotionalEnginePlan {
     private EngineGui gui;
     private EngineLogger logger;
 
-    private final Class<?> agent;
-    private final IInternalAccess access;
+    private final Object agentObject;
+    private IInternalAccess access;
+    private IMonitoringComponentFeature monitor;
+
+
 
     private Engine engine;
 
-    private JBdiEmoAgent emotionalAgent;
+    private JBDIEmoAgent emotionalAgent;
     private String[] emotionalOthers;
 
     @PlanAPI
     private IPlan plan;
 
-    public InitializeEmotionalEnginePlan(Class<?> agent, IInternalAccess access, String[] emotionalOthers) {
-        this.agent = agent;
-        this.access = access;
-        emotionalAgent = agent.getAnnotation(JBdiEmoAgent.class);
-        this.emotionalOthers = emotionalOthers;
-        System.err.println("length of other agents : " + emotionalAgent.others().length);
-        setEngine(new Engine());
+    public InitializeEmotionalEnginePlan(Object agent) {
+        this.agentObject = agent;
+        this.emotionalAgent = agent.getClass().getAnnotation(JBDIEmoAgent.class);
+
+        this.emotionalOthers = emotionalAgent.others().split(",");
+
+        System.err.println(Arrays.asList(emotionalOthers));
+
+        try {
+            this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
+        } catch (JBDIEmoException e) {
+            e.printStackTrace();
+        }
+
+        this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
+
+        IArgumentsResultsFeature argumentFeature = access.getComponentFeature(IArgumentsResultsFeature.class);
+        engine = (Engine) argumentFeature.getArguments().get(R.ENGINE);
+
+        setEngine(engine);
+
     }
 
     @PlanBody
     public void body() {
 
-        agentModelMapper = new AgentModelMapper(agent, engine);
-        platformOtherMapper = new PlatformOtherMapper(agent, engine, access);
-        elementEventMonitor = new ElementEventMonitor(engine, plan);
+        agentModelMapper = new AgentModelMapper(agentObject, engine, access);
+        platformOtherMapper = new PlatformOtherMapper(engine, access);
+        elementEventMonitor = new ElementEventMonitor(agentObject, engine);
 
         mapAgentModel();
         mapAgentOther();
-        addElementsForMonitoring();
+
         initializeEngine();
         initializeGui();
         initializeEngineLogger();
+
+        elementEventMonitor.subscribeForMonitoring();
 
     }
 
@@ -83,37 +98,11 @@ public class InitializeEmotionalEnginePlan {
 
         System.out.println("---------------------------------------");
         System.out.println("");
-
-    }
-
-    private void addElementsForMonitoring() {
-
-        System.out.println("");
-        System.out.println("-------- Monitor Agent Elements -------");
-
-        elementEventMonitor.addGoalsForMonitoring();
-
-        System.out.println("");
-
-        elementEventMonitor.addPlansForMonitoring();
-
-        System.out.println("");
-
-        elementEventMonitor.addBeliefsForMonitoring();
-
-        System.out.println("");
-
-        elementEventMonitor.addBeliefSetsForMonitoring();
-
-        System.out.println("---------------------------------------");
-        System.out.println("");
-
     }
 
     private void mapAgentOther() {
 
         String[] otherNames = null;
-
 
         // Get emotional other names parameter from ADF if exists
         if (emotionalOthers.length != 0) {
@@ -129,7 +118,7 @@ public class InitializeEmotionalEnginePlan {
             // Other mapper will try to find emotional other agents on current platform
             platformOtherMapper.setEmotionalOtherNames(new HashSet<String>(Arrays.asList(otherNames)));
 
-            // Run thread in other mapper to search current platform for defined emotional other agent names
+            // Run thread in other mapper to search current platform for defined emotional other agentClass names
             platformOtherMapper.setRunning(true);
 
         }
@@ -157,7 +146,7 @@ public class InitializeEmotionalEnginePlan {
 
         boolean isGui = false;
 
-        // Get guy parameter from ADF if exist get value
+        // Get guy parameter from ADF if exist get objectValue
 
         isGui = emotionalAgent.guiEnabled();
 
@@ -171,12 +160,8 @@ public class InitializeEmotionalEnginePlan {
 
     private void initializeEngineLogger() {
 
-        // Get engine instance
-  //     Engine engine = (Engine) getBeliefbase().getBelief(R.ENGINE).getFact();
-
         boolean isLogger = false;
         Integer loggingDelayMillis = null;
-
 
         isLogger = emotionalAgent.loggerEnabled();
 
@@ -226,4 +211,6 @@ public class InitializeEmotionalEnginePlan {
     public void setEngine(Engine engine) {
         this.engine = engine;
     }
+
+
 }

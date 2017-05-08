@@ -1,19 +1,12 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   --------------------------- 
-   04. 02. 2013
-   6:18 PM
-   
-*/
-
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventChecker;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class UserApprovalChecker implements EmotionalEventChecker {
 

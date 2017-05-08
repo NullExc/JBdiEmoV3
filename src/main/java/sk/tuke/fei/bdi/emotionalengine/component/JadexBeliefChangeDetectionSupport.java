@@ -1,19 +1,11 @@
 package sk.tuke.fei.bdi.emotionalengine.component;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   08. 01. 2013
-   8:40 PM
-
-*/
-
-
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class JadexBeliefChangeDetectionSupport {
 

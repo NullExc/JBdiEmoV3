@@ -1,18 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.component;
 
-
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   09. 11. 2012
-   11:02 AM
-
-*/
-
-
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.*;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventListener;
@@ -24,6 +11,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class Element extends JadexBeliefChangeDetectionSupport {
 

@@ -1,104 +1,134 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.Annotations.EmoBelief;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.Annotations.EmoGoal;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.Annotations.EmoPlan;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.BeliefMapper;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.GoalMapper;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.PlanMapper;
+import jadex.bdiv3.model.*;
+import jadex.bdiv3.runtime.IPlan;
+import jadex.bdiv3.runtime.impl.RPlan;
+import jadex.bdiv3x.runtime.IParameter;
+import jadex.bridge.IInternalAccess;
+import jadex.commons.FieldInfo;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.*;
+import sk.tuke.fei.bdi.emotionalengine.parser.BeliefMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
-import sk.tuke.fei.bdi.emotionalengine.plan.InitializeEmotionalEnginePlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 /**
- * Created by Peter on 14.3.2017.
+ * @author Tomáš Herich
+ * @author Peter Zemianek
  */
+
 public class AgentModelMapper {
 
-    private final Class agent;
+    private final Class agentClass;
+    private final Object agentObject;
     private final Engine engine;
+    private final IInternalAccess access;
+    private final BDIModel model;
+    private final MCapability capability;
 
-    public AgentModelMapper(Class agent, Engine engine) {
-        this.agent = agent;
+    public AgentModelMapper(Object agent, Engine engine, IInternalAccess access) {
+        this.agentObject = agent;
+        this.agentClass = agent.getClass();
         this.engine = engine;
+        this.access = access;
+
+        model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
+        capability = model.getCapability();
     }
 
     public void mapPlans() {
 
         int planCount = 0;
 
-        PlanMapper planMapper = new PlanMapper(agent);
+        for(MPlan mPlan : capability.getPlans()) {
 
-        for (Class clazz : planMapper.internalPlans()) {
-            if (clazz.isAnnotationPresent(EmoPlan.class)) {
-                engine.addElement(clazz.getSimpleName(), R.PLAN);
-                planCount++;
+            MBody body = mPlan.getBody();
+
+            try {
+                if (body.getMethod() != null) {
+
+                    for (Method method : agentClass.getDeclaredMethods()) {
+
+                        if (method.isAnnotationPresent(EmotionalPlan.class)
+                                && method.getName().equals(body.getMethod().getName())) {
+
+                            EmotionalPlan emoPlan = method.getAnnotation(EmotionalPlan.class);
+                            JBDIEmo.UserPlanParams.put(method.getName(), emoPlan);
+
+                            engine.addElement(method.getName(), R.PLAN);
+                            mPlan.setDescription(method.getName());
+
+                            planCount++;
+                        }
+                    }
+                } else if (body.getClazz() != null) {
+                    Class planClass = Class.forName(body.getClazz().getTypeName());
+
+                    if (planClass.isAnnotationPresent(EmotionalPlan.class)) {
+                        String simpleName = body.getClazz().getType0().getSimpleName();
+
+                        EmotionalPlan emoPlan = (EmotionalPlan) planClass.getAnnotation(EmotionalPlan.class);
+                        JBDIEmo.UserPlanParams.put(simpleName, emoPlan);
+
+                        engine.addElement(simpleName, R.PLAN);
+                        mPlan.setDescription(simpleName);
+
+                        planCount++;
+                    }
+                }
+            } catch (ClassNotFoundException ex) {
+                ex.printStackTrace();
             }
         }
 
-        for (Class clazz : planMapper.externalPlans()) {
-            if (clazz.isAnnotationPresent(EmoPlan.class)) {
-                engine.addElement(clazz.getSimpleName(), R.PLAN);
-                planCount++;
-            }
-        }
-
-        for (Method method : planMapper.methodPlans()) {
-            if (method.isAnnotationPresent(EmoPlan.class)) {
-                engine.addElement(method.getName(), R.PLAN);
-                planCount++;
-            }
-        }
-
-        int totalCount = planMapper.externalPlans().size() + planMapper.internalPlans().size() + planMapper.methodPlans().size();
+        int totalCount = capability.getPlans().size();
 
         System.out.println("Plans created : " + planCount + ", total count of plans : " + totalCount);
+
     }
 
     public void mapGoals() {
 
         int goalCount = 0;
 
-        GoalMapper goalMapper = new GoalMapper(agent);
+        for (MGoal mGoal : capability.getGoals()) {
+            try {
+                Class goalClass = Class.forName(mGoal.getName());
+                if (goalClass.isAnnotationPresent(EmotionalGoal.class)) {
 
-        for (Class goal : goalMapper.internalGoals()) {
-            if (goal.isAnnotationPresent(EmoGoal.class)) {
-                engine.addElement(goal.getSimpleName(), R.GOAL);
-                goalCount++;
+                    engine.addElement(goalClass.getSimpleName(), R.GOAL);
+                    mGoal.setDescription(goalClass.getSimpleName());
+
+                    goalCount++;
+                }
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
             }
         }
 
-        for (Class goal : goalMapper.externalGoals()) {
-            if (goal.isAnnotationPresent(EmoGoal.class)) {
-                engine.addElement(goal.getSimpleName(), R.GOAL);
-                goalCount++;
-            }
-        }
-
-        int totalCount = goalMapper.internalGoals().size() + goalMapper.externalGoals().size();
+        int totalCount = capability.getGoals().size();
 
         System.out.println("Goals created : " + goalCount + ", total count of goals : " + totalCount);
-
     }
 
     public void mapBeliefs() {
 
         int beliefCount = 0;
 
-        BeliefMapper beliefMapper = new BeliefMapper(agent);
+        BeliefMapper beliefMapper = new BeliefMapper(agentClass);
 
         for (Field field : beliefMapper.fieldBeliefs()) {
-            if (field.isAnnotationPresent(EmoBelief.class)) {
+            if (field.isAnnotationPresent(EmotionalBelief.class)) {
                 engine.addElement(field.getName(), R.BELIEF);
                 beliefCount++;
             }
         }
 
         for (Method method : beliefMapper.methodBeliefs()) {
-            if (method.isAnnotationPresent(EmoBelief.class)) {
+            if (method.isAnnotationPresent(EmotionalBelief.class)) {
                 engine.addElement(method.getName(), R.BELIEF);
                 beliefCount++;
             }
@@ -109,7 +139,5 @@ public class AgentModelMapper {
         System.out.println("Beliefs created : " + beliefCount + ", total count of beliefs : " + totalCount);
 
     }
-
-
 
 }

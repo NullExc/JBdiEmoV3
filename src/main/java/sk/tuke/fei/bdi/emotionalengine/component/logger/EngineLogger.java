@@ -7,8 +7,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Created by Peter on 14.3.2017.
+ * @author Tomáš Herich
  */
+
 public class EngineLogger {
 
     private Engine engine;

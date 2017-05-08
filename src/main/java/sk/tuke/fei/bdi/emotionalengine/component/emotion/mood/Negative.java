@@ -1,15 +1,5 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotion.mood;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   24. 02. 2013
-   1:18 PM
-
-*/
 
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -18,6 +8,10 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.util.HashSet;
 import java.util.Set;
+
+/**
+ * @author Tomáš Herich
+ */
 
 public class Negative extends Mood {
 
@@ -40,7 +34,7 @@ public class Negative extends Mood {
 
     private void addValidEmotionIntensityValues(Engine engine, int elementType, int emotionId, Set valueSet) {
 
-        // Get all elements of specified element type from engine
+        // Get all elements of specified objectValue type from engine
         Element[] elements = engine.getElements(elementType);
 
         // Check if elements are valid

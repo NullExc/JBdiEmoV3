@@ -5,8 +5,9 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventCh
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 /**
- * Created by Peter on 26.3.2017.
+ * @author Tomáš Herich
  */
+
 public class GoalCreatedChecker implements EmotionalEventChecker {
     public boolean checkEmotionalEvent(EmotionalEvent event) {
         return event.getEventType() == R.EVT_GOAL_CREATED;

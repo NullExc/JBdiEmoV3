@@ -1,15 +1,8 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotion.calculators;
 
-/*
-
-   Created with IntelliJ IDEA.
-
-   Bc. Tomáš Herich
-   ---------------------------
-   02. 02. 2013
-   9:32 PM
-
-*/
+/**
+ * @author Tomáš Herich
+ */
 
 public class PolynomialCalculator implements Calculator {
 

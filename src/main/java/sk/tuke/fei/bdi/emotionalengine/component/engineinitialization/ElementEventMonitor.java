@@ -1,106 +1,165 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.runtime.IGoal;
-import jadex.bdiv3.runtime.IPlan;
-import jadex.bdiv3x.runtime.IElement;
-import jadex.commons.future.IResultListener;
-import sk.tuke.fei.bdi.emotionalengine.BDIParser.Annotations.EmoBelief;
+import jadex.bdiv3.runtime.impl.*;
+import jadex.bridge.IInternalAccess;
+import jadex.bridge.component.IMonitoringComponentFeature;
+import jadex.bridge.service.types.monitoring.IMonitoringEvent;
+import jadex.bridge.service.types.monitoring.IMonitoringService;
+import jadex.commons.IFilter;
+import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.ParameterValueMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage.MessageCenter;
-import sk.tuke.fei.bdi.emotionalengine.plan.InitializeEmotionalEnginePlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Created by Peter on 14.3.2017.
+ * @author Tomáš Herich
+ * @author Peter Zemianek
  */
+
 public class ElementEventMonitor {
 
-    private IPlan parentPlan;
+
     private Engine engine;
+    private IMonitoringComponentFeature monitor;
+    private IInternalAccess access;
     private MessageCenter messageCenter;
     private Map<String, IGoal> myActiveGoals = Collections.synchronizedMap(new ConcurrentHashMap<String, IGoal>());
     private Map<String, Object[]> myActivePlans = Collections.synchronizedMap(new ConcurrentHashMap<String, Object[]>());
     private ParameterValueMapper params;
 
-    public ElementEventMonitor(Engine engine, IPlan plan) {
-        this.parentPlan = plan;
+    private final IInternalBDIAgentFeature bdiFeature;
 
-        messageCenter = new MessageCenter();
+    public ElementEventMonitor(Object agent, Engine engine) {
+
+        try {
+            this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
+        } catch (JBDIEmoException e) {
+            e.printStackTrace();
+        }
+
+        this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
+
         this.engine = engine;
-        //engine = (Engine) parentPlan.getBeliefbase().getBelief(R.ENGINE).getFact();
-        params = new ParameterValueMapper();
+
+        bdiFeature = access.getComponentFeature(IInternalBDIAgentFeature.class);
+
+        params = new ParameterValueMapper(agent);
+
+        messageCenter = new MessageCenter(agent);
+
     }
 
-    public void addPlansForMonitoring() {
+    public void subscribeForMonitoring() {
 
-        // Get plan element names
-      /*  String[] planNames = engine.getElementsNames(R.PLAN);
+        monitor.subscribeToEvents(new IFilter<IMonitoringEvent>() {
+            public boolean filter(IMonitoringEvent event) {
 
-        // Iterate plan element names
-        if (planNames != null) {
-            for (String planName : planNames) {
+                Map<String, Object> properties = event.getProperties();
 
-                System.out.println("Plan added for monitoring: " + planName);
+                if (properties == null || properties.get("details") == null) {
+                    return false;
+                }
 
-                // Add plan listener for plan added and plan finished events
+                if ((properties.get("details") instanceof AbstractBDIInfo)) {
 
+                    AbstractBDIInfo bdiInfo = (AbstractBDIInfo) properties.get("details");
 
-                parentPlan.getPlanbase().addPlanListener(planName, new IPlanListener() {
+                    IInternalBDIAgentFeature bdiFeature = access.getComponentFeature(IInternalBDIAgentFeature.class);
 
-                    public void planAdded(AgentEvent ae) {
-                        handlePlanAddedEvent();
+                    System.out.println(event + " " + Arrays.asList(bdiFeature.getCapability().getPlans()));
+
+                    if (bdiInfo instanceof PlanInfo) {
+                        handlePlanEvent(bdiInfo);
+                    } else if (bdiInfo instanceof GoalInfo) {
+                        handleGoalEvent(bdiInfo);
+                    } else if (bdiInfo instanceof BeliefInfo) {
+                        handleBeliefEvent(bdiInfo);
                     }
-
-
-                    public void planFinished(AgentEvent ae) {
-                        handlePlanFinishedEvent();
-                    }
-                });
-
+                }
+                return true;
             }
-        }*/
+        }, true, IMonitoringService.PublishEventLevel.FINE);
+    }
+
+    public void handlePlanEvent(AbstractBDIInfo info) {
+
+        PlanInfo planInfo = (PlanInfo) info;
+
+        String[] planNames = engine.getElementsNames(R.PLAN);
+
+        if (planNames == null) return;
+
+        if (Arrays.asList(planNames).contains(planInfo.getType())) {
+            String state = planInfo.getState();
+            if (state.equals("NEW")) {
+                handlePlanAddedEvent();
+            } else if (state.equals("PASSED") || state.equals("ABORTED") || state.equals("FAILED")) {
+                handlePlanFinishedEvent();
+            }
+        }
+    }
+
+    public void handleGoalEvent(AbstractBDIInfo info) {
+
+    }
+
+    public void handleBeliefEvent(AbstractBDIInfo info) {
+
     }
 
     private void handlePlanAddedEvent() {
 
-        // Get currently active agent plans
-       /* IPlan[] plans = parentPlan.getPlanbase().getPlans();
+        for (RPlan plan : bdiFeature.getCapability().getPlans()) {
 
-        for (IPlan plan : plans) {
+            String description = plan.getModelElement().getDescription();
 
             // Check if plan is emotional (it's name is contained in emotional engine)
-            if (Arrays.asList(engine.getElementsNames(R.PLAN)).contains(plan.getModelElement().getName())) {
+            if (Arrays.asList(engine.getElementsNames(R.PLAN)).contains(description)) {
 
                 // Check if plan instance is new and fire plan added emotional event if is is
                 if (!myActivePlans.containsKey(plan.toString())) {
 
+                    System.err.println("<<<< Plan added to active plans! >>>> " + plan.getType());
 
                     // Check if plans reason is emotional goal
                     String reasonElementName = null;
                     // Get plan reason
-                    IElement reason = plan.getReason();
+
+
+
+                    RGoal reason = null;
+
+                    if (plan.getReason() instanceof  RGoal) {
+                        reason = (RGoal) plan.getReason();
+                    }
+
                     if (reason != null) {
+
+                        System.err.println("REASON FOUNDED " + reason);
                         // Get emotional goal names (possible reasons)
                         for (String goalName : engine.getElementsNames(R.GOAL)) {
 
-                            if (reason.getModelElement().getName().equals(goalName)) {
+                            if (reason.getModelElement().getDescription().equals(goalName)) {
                                 reasonElementName = goalName;
                             }
                         }
                     }
 
+                    //System.err.println("SAVED KEY : " + plan.toString());
                     // Put new plan instance into active plan map to avoid multiple plan added events for one plan instance
                     myActivePlans.put(plan.toString(), new Object[]{plan, reasonElementName});
 
-                    // Get element
+                    // Get objectValue
                     String elementName = plan.getModelElement().getName();
                     Element element = engine.getElement(elementName, R.PLAN);
 
@@ -111,51 +170,50 @@ public class ElementEventMonitor {
                     emotionalEvent.setElementName(elementName);
                     emotionalEvent.setEventType(R.EVT_PLAN_CREATED);
                     emotionalEvent.setResultType(R.RESULT_NULL);
-                    emotionalEvent.setUserParameters(params.getUserParameterValues(plan));
+                    emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams.get(description).value()));
                     emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
                     // Fire emotional event
                     element.processEmotionalEvent(emotionalEvent);
 
                     // Send emotional message
-                  //  messageCenter.sendEmotionalMessage(elementName, R.EVT_PLAN_CREATED, R.RESULT_NULL);
+                    messageCenter.sendEmotionalMessage(elementName, R.EVT_PLAN_CREATED, R.RESULT_NULL);
 
                 }
             }
-        }*/
+        }
     }
 
     private void handlePlanFinishedEvent() {
 
-       /* // Get currently active agent plans
-        IPlan[] agentActivePlans = parentPlan.getPlanbase().getPlans();
+        System.err.println("<<<< handled  finish plan event >>>> ");
 
         // Iterate plan instances stored in my active plan map to find if we have record of plan which is no longer active
         for (String myActivePlanKey : myActivePlans.keySet()) {
 
             boolean isStillActive = false;
 
-            // Iterate currently active agent plans
-            for (IPlan plan : agentActivePlans) {
-                // If plan instance stored in my active plan map is still currently active agent plan break and continue
+            // Iterate currently active access plans
+            for (RPlan plan : bdiFeature.getCapability().getPlans()) {
+                // If plan instance stored in my active plan map is still currently active access plan break and continue
                 // with testing next plan instance stored in my active plan map
-                if (myActivePlanKey.equals(plan.toString())) {
+                if (myActivePlanKey.equals(plan.toString()) ^ isPlanFinished(plan)) {
                     isStillActive = true;
                     break;
                 }
             }
 
-            // If plan instance stored in my active plan map is no longer currently active agent plan fire plan finished emotional event
+            // If plan instance stored in my active plan map is no longer currently active access plan fire plan finished emotional event
             if (!isStillActive) {
 
                 Object[] planObject = myActivePlans.get(myActivePlanKey);
-                IPlan plan = (IPlan) planObject[0];
+                RPlan plan = (RPlan) planObject[0];
                 String reason = (String) planObject[1];
 
                 // Remove no longer active plan instance from my active plan map to avoid multiple plan finished events for one plan instance
                 myActivePlans.remove(myActivePlanKey);
 
-                // Get element
+                // Get objectValue
                 String elementName = plan.getModelElement().getName();
                 Element element = engine.getElement(elementName, R.PLAN);
 
@@ -164,7 +222,7 @@ public class ElementEventMonitor {
 
                 // Get plan result
                 int planResult;
-                if (plan.getLifecycleState().equals("passed")) {
+                if (plan.getLifecycleState().equals(RPlan.PlanLifecycleState.PASSED)) {
                     planResult = R.RESULT_SUCCESS;
                 } else {
                     planResult = R.RESULT_FAILURE;
@@ -178,7 +236,8 @@ public class ElementEventMonitor {
                 emotionalEvent.setElementName(elementName);
                 emotionalEvent.setEventType(R.EVT_PLAN_FINISHED);
                 emotionalEvent.setResultType(planResult);
-                emotionalEvent.setUserParameters(params.getUserParameterValues(plan));
+                emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams
+                        .get(plan.getModelElement().getDescription()).value()));
                 emotionalEvent.setSystemParameters(systemParams);
 
                 // Fire emotional event
@@ -189,16 +248,16 @@ public class ElementEventMonitor {
 
             }
 
-        }*/
+        }
 
     }
 
     public void addGoalsForMonitoring() {
 
-        // Get goal element names
+        // Get goal objectValue names
       /*  String[] goalNames = engine.getElementsNames(R.GOAL);
 
-        // Iterate goal element names
+        // Iterate goal objectValue names
         if (goalNames != null) {
             for (String goalName : goalNames) {
 
@@ -223,7 +282,7 @@ public class ElementEventMonitor {
 
     private void handleGoalAddedEvent() {
 
-        // Get currently active agent goals
+        // Get currently active access goals
        /* IGoal[] agentActiveGoals = parentPlan.getGoalbase().getGoals();
 
         for (IGoal goal : agentActiveGoals) {
@@ -237,9 +296,9 @@ public class ElementEventMonitor {
                     // Put new goal instance into active goal map to avoid multiple goal added events for one goal instance
                     myActiveGoals.put(goal.toString(), goal);
 
-                    // Get element
+                    // Get objectValue
                     String elementName = goal.getModelElement().getName();
-                    Element element = engine.getElement(elementName, R.GOAL);
+                    Element objectValue = engine.getElement(elementName, R.GOAL);
 
                     // Create emotional event
                     EmotionalEvent emotionalEvent = new EmotionalEvent();
@@ -249,10 +308,10 @@ public class ElementEventMonitor {
                     emotionalEvent.setEventType(R.EVT_GOAL_CREATED);
                     emotionalEvent.setResultType(R.RESULT_NULL);
                     emotionalEvent.setUserParameters(params.getUserParameterValues(goal));
-                    emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
+                    emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
 
                     // Fire emotional event
-                    element.processEmotionalEvent(emotionalEvent);
+                    objectValue.processEmotionalEvent(emotionalEvent);
 
                 }
             }
@@ -261,7 +320,7 @@ public class ElementEventMonitor {
 
     private void handleGoalFinishedEvent() {
 
-        // Get currently active agent goals
+        // Get currently active access goals
       /*  IGoal[] agentActiveGoals = parentPlan.getGoalbase().getGoals();
 
         // Iterate goal instances stored in my active goal map to find if we have record of goal which is no longer active
@@ -269,10 +328,10 @@ public class ElementEventMonitor {
 
             boolean isStillActive = false;
 
-            // Iterate currently active agent goals
+            // Iterate currently active access goals
             for (IGoal goal : agentActiveGoals) {
 
-                // If goal instance stored in my active goal map is still currently active agent goal break and continue
+                // If goal instance stored in my active goal map is still currently active access goal break and continue
                 // with testing next goal instance stored in my active goal map
                 if (myActiveGoalKey.equals(goal.toString())) {
                     isStillActive = true;
@@ -280,7 +339,7 @@ public class ElementEventMonitor {
                 }
             }
 
-            // If goal instance stored in my active goal map is no longer currently active agent goal fire goal finished emotional event
+            // If goal instance stored in my active goal map is no longer currently active access goal fire goal finished emotional event
             if (!isStillActive) {
 
                 IGoal goal = myActiveGoals.get(myActiveGoalKey);
@@ -288,9 +347,9 @@ public class ElementEventMonitor {
                 // Remove no longer active goal instance from my active goal map to avoid multiple goal finished events for one goal instance
                 myActiveGoals.remove(myActiveGoalKey);
 
-                // Get element
+                // Get objectValue
                 String elementName = goal.getModelElement().getName();
-                Element element = engine.getElement(elementName, R.GOAL);
+                Element objectValue = engine.getElement(elementName, R.GOAL);
 
                 // Create emotional event
                 EmotionalEvent emotionalEvent = new EmotionalEvent();
@@ -308,10 +367,10 @@ public class ElementEventMonitor {
                 emotionalEvent.setEventType(R.EVT_GOAL_FINISHED);
                 emotionalEvent.setResultType(goalResult);
                 emotionalEvent.setUserParameters(params.getUserParameterValues(goal));
-                emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
+                emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
 
                 // Fire emotional event
-                element.processEmotionalEvent(emotionalEvent);
+                objectValue.processEmotionalEvent(emotionalEvent);
 
             }
 
@@ -321,10 +380,12 @@ public class ElementEventMonitor {
 
     public void addBeliefsForMonitoring() {
 
-        // Get belief element names
+
+
+        // Get belief objectValue names
        /* String[] beliefNames = engine.getElementsNames(R.BELIEF);
 
-        // Iterate plan element names
+        // Iterate plan objectValue names
         if (beliefNames != null) {
             for (String beliefName : beliefNames) {
 
@@ -341,9 +402,9 @@ public class ElementEventMonitor {
         }*/
     }
 
-    private void handleBeliefChangedEvent(EmoBelief belief) {
+    private void handleBeliefChangedEvent(EmotionalBelief belief) {
 
-        // Get element
+        // Get objectValue
         String elementName = belief.beliefName();
         Element element = engine.getElement(elementName, R.BELIEF);
 
@@ -367,10 +428,10 @@ public class ElementEventMonitor {
 
     public void addBeliefSetsForMonitoring() {
 
-        /*// Get belief element names
+        /*// Get belief objectValue names
         String[] beliefSetNames = engine.getElementsNames(R.BELIEF_SET);
 
-        // Iterate plan element names
+        // Iterate plan objectValue names
         if (beliefSetNames != null) {
             for (String beliefSetName : beliefSetNames) {
 
@@ -406,7 +467,7 @@ public class ElementEventMonitor {
 
                     public void factRemoved(AgentEvent ae) {
 
-                        // Remove element from the engine
+                        // Remove objectValue from the engine
                         EmotionalBelief emotionalBelief = (EmotionalBelief) ae.getValue();
                         engine.removeElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF);
 
@@ -416,13 +477,13 @@ public class ElementEventMonitor {
         }*/
     }
 
-    private void handleFactChangedEvent(EmoBelief emotionalBelief) {
+    private void handleFactChangedEvent(EmotionalBelief emotionalBelief) {
 
-        // Get element
+        // Get objectValue
         String elementName = emotionalBelief.beliefName();
         Element element = engine.getElement(elementName, R.BELIEF_SET_BELIEF);
 
-        // Check if element is valid
+        // Check if objectValue is valid
         if (element != null) {
 
             // Create emotional event
@@ -446,6 +507,12 @@ public class ElementEventMonitor {
 
     public MessageCenter getMessageCenter() {
         return messageCenter;
+    }
+
+    private boolean isPlanFinished(RPlan plan) {
+        return plan.getLifecycleState().equals(RPlan.PlanLifecycleState.PASSED)
+                || plan.getLifecycleState().equals(RPlan.PlanLifecycleState.ABORTED)
+                || plan.getLifecycleState().equals(RPlan.PlanLifecycleState.FAILED);
     }
 
 

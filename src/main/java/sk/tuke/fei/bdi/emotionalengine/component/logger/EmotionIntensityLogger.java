@@ -24,8 +24,9 @@ import java.util.Date;
 import java.util.Set;
 
 /**
- * Created by Peter on 22.3.2017.
+ * @author Tomáš Herich
  */
+
 public class EmotionIntensityLogger {
 
     private File file;
@@ -87,32 +88,32 @@ public class EmotionIntensityLogger {
 
             boolean newEngineElement = true;
 
-            // Check if engine element is valid
+            // Check if engine objectValue is valid
             if (engineElem != null) {
 
-                // Get all xml nodes with tag of engine element type i.e. all nodes with node tag name goal, plan, belief ...
+                // Get all xml nodes with tag of engine objectValue type i.e. all nodes with node tag name goal, plan, belief ...
                 // e.g. <goal>, <plan>, <belief> ...
                 NodeList elemTypeNodes = doc.getElementsByTagName(R.EMOTIONAL_ELEMENT_TYPE_NAMES.get(engineElemType).replace(" ",""));
 
-                // Iterate xml nodes with tag of engine element type
+                // Iterate xml nodes with tag of engine objectValue type
                 for (int i = 0; i < elemTypeNodes.getLength(); i++) {
 
-                    // Cast xml node to element
+                    // Cast xml node to objectValue
                     Element engineElemTypeElement = (Element) elemTypeNodes.item(i);
 
-                    // If xml node attribute "name" has value of engine element name
-                    // e.g. xml node <plan name="test_plan"> and engine element with name "test_plan"
+                    // If xml node attribute "name" has objectValue of engine objectValue name
+                    // e.g. xml node <plan name="test_plan"> and engine objectValue with name "test_plan"
                     if (engineElemTypeElement.getAttribute("name").equals(engineElem.getName())) {
 
                         // Belief set belief are specific case because they are added and remove dynamicaly
                         // The code that handle belief set belief is below: "if (newEngineElement)"
                         if (engineElemType != R.BELIEF_SET_BELIEF) {
-                            // Add emotion intensity listeners to engine element emotions
-                            // When triggered they will append xml element containing new emotion intensity and date
+                            // Add emotion intensity listeners to engine objectValue emotions
+                            // When triggered they will append xml objectValue containing new emotion intensity and date
                             addEmotionIntensityListeners(engineElem, engineElemTypeElement);
                         }
 
-                        // Xml node was found element is already tracked
+                        // Xml node was found objectValue is already tracked
                         newEngineElement = false;
                         break;
 
@@ -120,7 +121,7 @@ public class EmotionIntensityLogger {
                 }
             }
 
-            // If engine contains engine element which is not tracked by logger add it to xml
+            // If engine contains engine objectValue which is not tracked by logger add it to xml
             // Only elements that can be added at runtime are belief sets
             if (newEngineElement) {
 
@@ -132,21 +133,21 @@ public class EmotionIntensityLogger {
 
     private void addNewElementToDom(sk.tuke.fei.bdi.emotionalengine.component.Element engineElem) {
 
-        // Get all xml nodes with tag of engine belief set element
+        // Get all xml nodes with tag of engine belief set objectValue
         NodeList beliefSetNodes = doc.getElementsByTagName("beliefset");
 
         // Iterate xml nodes
         for (int i = 0; i < beliefSetNodes.getLength(); i++) {
 
-            // Check if node is xml element type
+            // Check if node is xml objectValue type
             if (beliefSetNodes.item(i) instanceof Element) {
 
-                // Get node and cast it to xml element type
+                // Get node and cast it to xml objectValue type
                 Element beliefSetElement = (Element) beliefSetNodes.item(i);
 
 
-                // Check if engine element parent belief set is equal to xml element node name
-                // (xml element node of belief set type)
+                // Check if engine objectValue parent belief set is equal to xml objectValue node name
+                // (xml objectValue node of belief set type)
                 if (engineElem.getParentBeliefSetName().equals(beliefSetElement.getAttribute("name"))) {
 
 
@@ -156,7 +157,7 @@ public class EmotionIntensityLogger {
                     beliefSetElement.appendChild(beliefSetBelief);
 
 
-                    // Get engine emotions which belongs to engine element (belief set belief)
+                    // Get engine emotions which belongs to engine objectValue (belief set belief)
                     Set<Emotion> emotions = engineElem.getEmotions();
 
                     // Iterate emotions
@@ -172,8 +173,8 @@ public class EmotionIntensityLogger {
                     }
 
 
-                    // Add emotion intensity listeners to engine element emotions
-                    // When triggered they will append xml element containing new emotion intensity and date
+                    // Add emotion intensity listeners to engine objectValue emotions
+                    // When triggered they will append xml objectValue containing new emotion intensity and date
                     addEmotionIntensityListeners(engineElem, beliefSetBelief);
 
                 }
@@ -196,7 +197,7 @@ public class EmotionIntensityLogger {
             // Check if emotion xml node is valid
             if (emotionNode instanceof Element) {
 
-                // Cast emotion xml node to xml element
+                // Cast emotion xml node to xml objectValue
                 final Element emotionElement = (Element) emotionNode;
 
                 // Get engine emotion id
@@ -220,31 +221,31 @@ public class EmotionIntensityLogger {
                                 // Initialize simple date format (year month day _ hour minute second e.g. 20130309_161135)
                                 SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
-                                // Create xml element with name "intensity" which will store intensity and date
+                                // Create xml objectValue with name "intensity" which will store intensity and date
                                 Element emotionIntensity = doc.createElement("intensity");
 
-                                // Create attribute "date" with value "current date formatted with simple date formatter"
-                                // in xml element with name "intensity"
+                                // Create attribute "date" with objectValue "current date formatted with simple date formatter"
+                                // in xml objectValue with name "intensity"
                                 emotionIntensity.setAttribute("date", simpleDateFormat.format(new Date()));
 
 
                                 // Create xml text node with name "intensity_value"
                                 Text intensityValue = doc.createTextNode("intensity_value");
 
-                                // Round intensity value and cast it to String
+                                // Round intensity objectValue and cast it to String
                                 NumberFormat numberFormat = NumberFormat.getInstance();
                                 numberFormat.setMaximumFractionDigits(4);
                                 numberFormat.setMinimumFractionDigits(4);
                                 numberFormat.setGroupingUsed(false);
                                 String intensityString = numberFormat.format(MyMath.roundDouble(engineEmotion.getIntensity(), 4));
 
-                                // Add intensity value string to xml text node with name "intensity_value"
+                                // Add intensity objectValue string to xml text node with name "intensity_value"
                                 intensityValue.setNodeValue(intensityString);
 
-                                // Add xml text node with name "intensity_value" to xml element with name "intensity"
+                                // Add xml text node with name "intensity_value" to xml objectValue with name "intensity"
                                 emotionIntensity.appendChild(intensityValue);
 
-                                // Add xml element with name "intensity" to emotion xml element
+                                // Add xml objectValue with name "intensity" to emotion xml objectValue
                                 emotionElement.appendChild(emotionIntensity);
 
                             }
