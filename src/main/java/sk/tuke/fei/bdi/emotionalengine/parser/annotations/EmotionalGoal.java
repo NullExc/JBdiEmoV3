@@ -8,12 +8,10 @@ import java.lang.annotation.Target;
 /**
  * @author Peter Zemianek
  */
-@Target({ElementType.TYPE})
+@Target({ElementType.TYPE, ElementType.CONSTRUCTOR, ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EmotionalGoal {
-    public String goalName() default  "emoGoal";
-    public double otherDesireGoalSucces() default 0;
-    public double otherDesireGoalFailure() default 0;
-    public double desirability() default 0;
-    public double probability() default  0;
+
+    EmotionalParameter[] value() default {};
+
 }

@@ -1,19 +1,23 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
 import jadex.bdiv3.model.*;
-import jadex.bdiv3.runtime.IPlan;
-import jadex.bdiv3.runtime.impl.RPlan;
-import jadex.bdiv3x.runtime.IParameter;
 import jadex.bridge.IInternalAccess;
-import jadex.commons.FieldInfo;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.*;
+import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
+import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.parser.BeliefMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author Tomáš Herich
@@ -43,7 +47,7 @@ public class AgentModelMapper {
 
         int planCount = 0;
 
-        for(MPlan mPlan : capability.getPlans()) {
+        for (MPlan mPlan : capability.getPlans()) {
 
             MBody body = mPlan.getBody();
 
@@ -56,7 +60,7 @@ public class AgentModelMapper {
                                 && method.getName().equals(body.getMethod().getName())) {
 
                             EmotionalPlan emoPlan = method.getAnnotation(EmotionalPlan.class);
-                            JBDIEmo.UserPlanParams.put(method.getName(), emoPlan);
+                            JBDIEmo.UserPlanParams.get(engine.getAgentName()).put(method.getName(), emoPlan);
 
                             engine.addElement(method.getName(), R.PLAN);
                             mPlan.setDescription(method.getName());
@@ -71,7 +75,7 @@ public class AgentModelMapper {
                         String simpleName = body.getClazz().getType0().getSimpleName();
 
                         EmotionalPlan emoPlan = (EmotionalPlan) planClass.getAnnotation(EmotionalPlan.class);
-                        JBDIEmo.UserPlanParams.put(simpleName, emoPlan);
+                        JBDIEmo.UserPlanParams.get(engine.getAgentName()).put(simpleName, emoPlan);
 
                         engine.addElement(simpleName, R.PLAN);
                         mPlan.setDescription(simpleName);
@@ -87,7 +91,6 @@ public class AgentModelMapper {
         int totalCount = capability.getPlans().size();
 
         System.out.println("Plans created : " + planCount + ", total count of plans : " + totalCount);
-
     }
 
     public void mapGoals() {
@@ -97,12 +100,24 @@ public class AgentModelMapper {
         for (MGoal mGoal : capability.getGoals()) {
             try {
                 Class goalClass = Class.forName(mGoal.getName());
-                if (goalClass.isAnnotationPresent(EmotionalGoal.class)) {
 
-                    engine.addElement(goalClass.getSimpleName(), R.GOAL);
-                    mGoal.setDescription(goalClass.getSimpleName());
+                for (Constructor constructor : goalClass.getConstructors()) {
 
-                    goalCount++;
+                    if (constructor.isAnnotationPresent(EmotionalGoal.class)) {
+
+                        EmotionalGoal emotionalGoal = (EmotionalGoal) constructor.getAnnotation(EmotionalGoal.class);
+
+                        String goalName = goalClass.getSimpleName();
+
+                        JBDIEmo.UserGoalParams.get(engine.getAgentName()).put(goalName, emotionalGoal);
+
+                        engine.addElement(goalName, R.GOAL);
+                        mGoal.setDescription(goalName);
+
+                        goalCount++;
+
+                        break;
+                    }
                 }
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();
@@ -118,23 +133,48 @@ public class AgentModelMapper {
 
         int beliefCount = 0;
 
-        BeliefMapper beliefMapper = new BeliefMapper(agentClass);
+        for (MBelief belief : capability.getBeliefs()) {
 
-        for (Field field : beliefMapper.fieldBeliefs()) {
-            if (field.isAnnotationPresent(EmotionalBelief.class)) {
-                engine.addElement(field.getName(), R.BELIEF);
-                beliefCount++;
+            if (belief.getValue(access) instanceof EmotionalBelief) {
+
+                EmotionalBelief emotionalBelief = (EmotionalBelief) belief.getValue(access);
+
+                if (emotionalBelief != null && emotionalBelief.getName() != null
+                        && !emotionalBelief.getName().equals("") && emotionalBelief.getName().equals(belief.getName())) {
+
+                    engine.addElement(belief.getName(), R.BELIEF);
+
+                    beliefCount++;
+                } else {
+                    if (!emotionalBelief.getName().equals(belief.getName())) {
+                        System.out.println("Belief name doesn't match EmotionalBelief name: " + belief.getName() + ", " + emotionalBelief.getName());
+                    }
+                }
+            } else if (belief.getValue(access) instanceof Collection<?>) {
+
+                Collection<EmotionalBelief> collection = (Collection<EmotionalBelief>) belief.getValue(access);
+
+                engine.addElement(belief.getName(), R.BELIEF_SET);
+
+                Iterator iterator = collection.iterator();
+
+                while (iterator.hasNext()) {
+
+                    EmotionalBelief elementBelief = (EmotionalBelief) iterator.next();
+
+                    if (belief.getName() != null && !belief.getName().equals("")) {
+
+                        // Add element corresponding to particular belief into emotional engine
+                        engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, belief.getName());
+
+                        // Increment belief count
+                        beliefCount++;
+                    }
+                }
             }
         }
 
-        for (Method method : beliefMapper.methodBeliefs()) {
-            if (method.isAnnotationPresent(EmotionalBelief.class)) {
-                engine.addElement(method.getName(), R.BELIEF);
-                beliefCount++;
-            }
-        }
-
-        int totalCount = beliefMapper.fieldBeliefs().size() + beliefMapper.methodBeliefs().size();
+        int totalCount = capability.getBeliefs().size();
 
         System.out.println("Beliefs created : " + beliefCount + ", total count of beliefs : " + totalCount);
 

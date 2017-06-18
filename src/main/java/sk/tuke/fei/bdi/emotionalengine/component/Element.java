@@ -5,8 +5,12 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventListener;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+//import java.beans.PropertyChangeEvent;
+//import java.beans.PropertyChangeListener;
+
+import jadex.commons.beans.PropertyChangeListener;
+import jadex.commons.beans.PropertyChangeEvent;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;

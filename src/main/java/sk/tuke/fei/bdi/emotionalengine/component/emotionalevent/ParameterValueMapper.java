@@ -22,6 +22,7 @@ import java.util.Set;
 
 /**
  * @author Tomáš Herich
+ * @author Peter Zemianek
  */
 
 public class ParameterValueMapper {
@@ -75,7 +76,7 @@ public class ParameterValueMapper {
 
         }
 
-        System.err.println("User parameters : " + userParameters);
+     //   System.err.println("User parameters : " + userParameters);
 
         return userParameters;
     }
@@ -147,7 +148,7 @@ public class ParameterValueMapper {
 
         }
 
-        System.err.println("System parameters : " + systemParameters);
+     //   System.err.println("System parameters : " + systemParameters);
 
         return systemParameters;
     }
@@ -171,9 +172,4 @@ public class ParameterValueMapper {
             }
         }
     }
-
-    private Double getFieldResult(String fieldName) {
-        return new Double(0);
-    }
-
 }

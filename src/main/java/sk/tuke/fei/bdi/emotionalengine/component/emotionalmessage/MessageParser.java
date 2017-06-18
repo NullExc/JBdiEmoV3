@@ -31,6 +31,23 @@ public class MessageParser {
 
     }
 
+    public MessageParser(String message) {
+
+        // Example of message content string
+        // emotional_message|plan_finished|success|EmotionalAgent@PC2012_4e9|example_print_plan
+
+        messageContent = message;
+
+        String[] messageParts = messageContent.split(R.MESSAGE_DELIMITER_REGEXP);
+
+        tag = messageParts[0];
+        event = messageParts[1];
+        result = messageParts[2];
+        sender = messageParts[3];
+        plan = messageParts[4];
+
+    }
+
     public String getTag() {
         return tag;
     }

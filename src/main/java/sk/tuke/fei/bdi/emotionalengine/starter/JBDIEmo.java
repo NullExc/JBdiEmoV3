@@ -11,6 +11,7 @@ import jadex.commons.SUtil;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.ITuple2Future;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
@@ -24,11 +25,14 @@ import java.util.*;
 /**
  * @author Peter Zemianek
  */
+
 public class JBDIEmo {
 
-    public static Map<String, EmotionalPlan> UserPlanParams = new LinkedHashMap<String, EmotionalPlan>();
-    public static Map<String, EmotionalGoal> UserGoalParams = new LinkedHashMap<String, EmotionalGoal>();
-    public static Map<String, EmotionalBelief> UserBeliefParams = new LinkedHashMap<String, EmotionalBelief>();
+    //public static  Map<String, EmotionalPlan> UserPlanParams = new LinkedHashMap<String, EmotionalPlan>();
+    //public static  Map<String, EmotionalGoal> UserGoalParams = new LinkedHashMap<String, EmotionalGoal>();
+
+    public static  Map<String, Map<String, EmotionalPlan>> UserPlanParams = new LinkedHashMap<>();
+    public static  Map<String, Map<String, EmotionalGoal>> UserGoalParams = new LinkedHashMap<>();
 
     public static Set<IComponentIdentifier> MessageListeners = new HashSet<>();
 
@@ -64,11 +68,8 @@ public class JBDIEmo {
             String agentName = (String) pair.getKey();
             String agentModel = (String) pair.getValue();
 
-
-            CreationInfo creationInfo = new CreationInfo(SUtil.createHashMap(new String[]{R.ENGINE}, new Object[]{new Engine()}));
-
             ITuple2Future<IComponentIdentifier, Map<String, Object>> fut_cid =
-                    cms.createComponent(agentName, agentModel, creationInfo);
+                    cms.createComponent(agentName, agentModel, null);
 
             IComponentIdentifier cid =  fut_cid.getFirstResult();
 
@@ -103,6 +104,11 @@ public class JBDIEmo {
     }
 
     public static EmotionalParameter findPlanParameter(EmotionalPlan plan, String paramName) {
+
+        if (plan == null) {
+            return null;
+        }
+
         for (EmotionalParameter parameter : plan.value()) {
             if (parameter.parameter().equals(paramName)) {
                 return parameter;

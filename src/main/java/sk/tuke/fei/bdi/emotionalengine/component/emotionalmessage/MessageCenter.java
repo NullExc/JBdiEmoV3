@@ -38,7 +38,7 @@ public class MessageCenter {
 
     private ParameterValueMapper params;
 
-    public MessageCenter(Object agent) {
+    public MessageCenter(Object agent, Engine engine) {
 
 
         if (agent instanceof IInternalAccess) {
@@ -55,13 +55,12 @@ public class MessageCenter {
 
         }
 
-        IArgumentsResultsFeature argumentFeature = access.getComponentFeature(IArgumentsResultsFeature.class);
-        engine = (Engine) argumentFeature.getArguments().get(R.ENGINE);
+        this.engine = engine;
 
         model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
         capability = model.getCapability();
 
-        params = new ParameterValueMapper(agent);
+        params = new ParameterValueMapper(engine.getAgentObject());
     }
 
     public void sendEmotionalMessage(String planName, int eventType, int resultType) {
@@ -86,11 +85,7 @@ public class MessageCenter {
         // Get component identifiers of emotional others stored in engine
         Set<IComponentIdentifier> componentIds = engine.getEmotionalOtherIds();
 
-        System.err.println("<<<SENDING IN PROGRES ... " + componentIds + " " + JBDIEmo.MessageListeners);
-
         for (IComponentIdentifier serviceCid : JBDIEmo.MessageListeners) {
-
-           // IComponentIdentifier listenerCid = service.getComponentIdentifier().get();
 
             IFuture<ICommunicationService> service = SServiceProvider.getService(access.getExternalAccess(), serviceCid, ICommunicationService.class);
 
@@ -114,7 +109,7 @@ public class MessageCenter {
                         message.put(R.KEY_SENDER_ID, access.getComponentIdentifier().getLocalName());
                         message.put(R.KEY_PLAN_NAME, planName);
 
-                        System.err.println("<<< MESSAGE " + message + " SENT FROM " + access.getComponentIdentifier().getLocalName());
+                        //System.err.println("<<< MESSAGE " + message + " SENT FROM " + access.getComponentIdentifier().getLocalName());
 
                         IFuture<Void> recieve = result.messageRecieved(message);
                         recieve.addResultListener(new IResultListener<Void>() {
@@ -125,7 +120,7 @@ public class MessageCenter {
 
                             @Override
                             public void resultAvailable(Void result) {
-                                System.err.println("<<< RECIEVE DONE");
+
                             }
                         });
                     }
@@ -136,15 +131,13 @@ public class MessageCenter {
 
     public void recieveMessages(Map<String, String> receivedMessage) {
 
-        System.err.println("<<<< MESSAGE RECIEVED! " + receivedMessage + " TO : " + access.getComponentIdentifier().getLocalName());
-
         // Assign message event to message parser
         MessageParser message = new MessageParser(receivedMessage);
 
         // Add received message to engine set (used as data source for GUI)
         engine.addReceivedMessage(message.getMessageContent());
 
-        Element objectValue = null;
+        Element element = null;
         String otherName = null;
         String otherPlanName = null;
         MPlan otherPlanModel = null;
@@ -164,18 +157,18 @@ public class MessageCenter {
 
                 String description = planModel.getDescription();
 
-                EmotionalPlan emotionalPlan = JBDIEmo.UserPlanParams.get(description);
+                EmotionalPlan emotionalPlan = JBDIEmo.UserPlanParams.get(engine.getAgentName()).get(description);
+
+                if (emotionalPlan == null) continue;
 
                 boolean otherGroup = false;
 
                 if (JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER_GROUP) != null) {
                     otherGroup = JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER_GROUP).booleanValue();
                 }
-
                 if (JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER) != null) {
                     otherName = JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER).stringValue();
                 }
-
                 if (JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER_PLAN) != null) {
                     otherPlanName = JBDIEmo.findPlanParameter(emotionalPlan, R.PARAM_EMOTIONAL_OTHER_PLAN).stringValue();
                 }
@@ -184,27 +177,31 @@ public class MessageCenter {
                 String senderName = message.getSender();
 
                 // Based on other group parameter
-                if (otherGroup) {
+                if (otherName != null && otherPlanName != null) {
+                    if (otherGroup) {
 
-                    // If sender name satisfies name type of emotional other specified in ADF
-                    if (senderName.matches(otherName + ".*") && message.getPlan().equals(otherPlanName)) {
+                        // If sender name satisfies name type of emotional other specified in ADF
+                        if (senderName.matches(otherName + ".*") && message.getPlan().equals(otherPlanName)) {
 
-                        // Get plan model of emotional other agent type specified in this agent ADF
-                        otherPlanModel = planModel;
-                        break;
-                    }
-                } else {
+                            // Get plan model of emotional other agent type specified in this agent ADF
+                            otherPlanModel = planModel;
+                            break;
+                        }
+                    } else {
 
-                    // If sender name satisfies exact name of emotional other specified in ADF
-                    if (senderName.matches(otherName) && message.getPlan().equals(otherPlanName)) {
+                        // If sender name satisfies exact name of emotional other specified in ADF
+                        if (senderName.matches(otherName) && message.getPlan().equals(otherPlanName)) {
 
-                        // Get plan model of exact emotional other agent specified in this agent ADF
-                        otherPlanModel = planModel;
-                        break;
+                            // Get plan model of exact emotional other agent specified in this agent ADF
+                            otherPlanModel = planModel;
+                            break;
+                        }
                     }
                 }
 
             } catch (Exception e) {
+
+                e.printStackTrace();
 //                Try catch used because it can't be tested otherwise because Jadex bug where you
 //                can't get parameter array of plan but you can get parameter by name
             }
@@ -213,13 +210,16 @@ public class MessageCenter {
         // Check if message contained valid information about other agent defined in this agent ADF
         if (otherName != null && otherPlanName != null && otherPlanModel != null) {
 
-            // Get objectValue of emotional other agent plan
-            objectValue = engine.getElement(otherPlanModel.getDescription(), R.PLAN);
+            // Get element of emotional other agent plan
+            element = engine.getElement(otherPlanModel.getDescription(), R.PLAN);
 
         }
 
-        // Check if objectValue is valid
-        if (objectValue != null) {
+        // Check if element is valid
+        if (element != null) {
+
+            //System.err.println(engine.getElements(R.PLAN).length + engine.getAgentName() + " " +
+            //        otherPlanModel.getDescription() + " " + (element == null));
 
             // Create emotional event
             EmotionalEvent emotionalEvent = new EmotionalEvent();
@@ -244,21 +244,25 @@ public class MessageCenter {
 
             // Map emotional other agent plan defined in this agent ADF for user parameters
             Map<String, Double> userParameters = params
-                    .getUserParameterValues(JBDIEmo.UserPlanParams.get(otherPlanModel.getDescription()).value());  //params.getPlanModelUserParameterValues(otherPlanModel);
+                    .getUserParameterValues(JBDIEmo.UserPlanParams.get(engine.getAgentName()).get(otherPlanModel.getDescription()).value());  //params.getPlanModelUserParameterValues(otherPlanModel);
 
             // Add special user parameters which signify that this is plan of emotional other agent
             userParameters.put(R.PARAM_EMOTIONAL_OTHER, 1.0d);
             userParameters.put(R.PARAM_EMOTIONAL_OTHER_PLAN, 1.0d);
 
             // Add prepared data to emotional event
-            emotionalEvent.setElementName(objectValue.getName());
+            emotionalEvent.setElementName(element.getName());
             emotionalEvent.setEventType(eventType);
             emotionalEvent.setResultType(resultType);
             emotionalEvent.setUserParameters(userParameters);
-            emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
+            emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
-            // Send emotional event to its respective objectValue
-            objectValue.processEmotionalEvent(emotionalEvent);
+            // Send emotional event to its respective element
+            element.processEmotionalEvent(emotionalEvent);
+
+            //System.err.println("<<<< MESSAGE RECIEVED! " + userParameters + params.getSystemParameterValues(element) +
+            //        " TO : " + access.getComponentIdentifier().getLocalName());
+
 
         }
 

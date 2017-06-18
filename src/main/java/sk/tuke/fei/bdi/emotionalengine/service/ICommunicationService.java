@@ -22,4 +22,6 @@ public interface ICommunicationService {
     public IFuture<Void> messageRecieved(Map<String, String> message);
 
     public IFuture<IComponentIdentifier> getComponentIdentifier();
+
+    public IFuture<Void> setEngine(IFuture<Engine> engine);
 }

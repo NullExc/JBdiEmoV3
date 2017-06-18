@@ -5,10 +5,15 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Mood;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Negative;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Positive;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalBelief;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
-import java.beans.PropertyChangeEvent;
-import java.beans.PropertyChangeListener;
+//import java.beans.PropertyChangeEvent;
+//import java.beans.PropertyChangeListener;
+import jadex.commons.beans.PropertyChangeListener;
+import jadex.commons.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -19,6 +24,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 public class Engine extends JadexBeliefChangeDetectionSupport implements Runnable{
 
     private String agentName;
+    private Object agentObject;
 
     private Map<String, Element> emotionalElements;
     private Queue<String> receivedMessages;
@@ -34,7 +40,6 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     // Mood properties
     private Mood positiveMood;
     private Mood negativeMood;
-
 
     public Engine() {
         super();
@@ -67,6 +72,8 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
 
             // Check if engine was initialized
             if (isInitialized) {
+
+               // System.out.println("Fire belief change " + agentName);
 
                 // Calculate mood intensity
                 positiveMood.calculateIntensity(this);
@@ -435,5 +442,13 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
      */
     public Mood getNegativeMood() {
         return negativeMood;
+    }
+
+    public Object getAgentObject() {
+        return agentObject;
+    }
+
+    public void setAgentObject(Object agentObject) {
+        this.agentObject = agentObject;
     }
 }

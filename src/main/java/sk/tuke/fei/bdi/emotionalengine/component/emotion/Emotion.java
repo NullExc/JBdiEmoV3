@@ -6,6 +6,7 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotion.calculators.Calculator;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEventChecker;
 import sk.tuke.fei.bdi.emotionalengine.helper.MyMath;
+import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.awt.*;
 import java.util.HashMap;
@@ -310,6 +311,7 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
         decayedIntensity = Math.max(0.0, decayedIntensity - 0.0005);
 
         intensity = MyMath.roundDouble(decayedIntensity, 4);
+
         decayStep++;
 
     }

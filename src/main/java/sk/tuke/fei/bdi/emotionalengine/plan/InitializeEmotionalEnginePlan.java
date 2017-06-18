@@ -2,10 +2,13 @@ package sk.tuke.fei.bdi.emotionalengine.plan;
 
 
 import jadex.bdiv3.annotation.*;
+import jadex.bdiv3.features.IBDIAgentFeature;
 import jadex.bdiv3.runtime.IPlan;
 import jadex.bridge.IInternalAccess;
-import jadex.bridge.component.IArgumentsResultsFeature;
-import jadex.bridge.component.IMonitoringComponentFeature;
+import jadex.bridge.service.component.IProvidedServicesFeature;
+import jadex.commons.future.Future;
+import jadex.commons.future.IResultListener;
+import sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage.MessageCenter;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.JBDIEmoAgent;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -15,10 +18,12 @@ import sk.tuke.fei.bdi.emotionalengine.component.engineinitialization.ElementEve
 import sk.tuke.fei.bdi.emotionalengine.component.engineinitialization.PlatformOtherMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.logger.EngineLogger;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
 /**
  * @author Peter Zemianek
@@ -31,22 +36,18 @@ public class InitializeEmotionalEnginePlan {
     private ElementEventMonitor elementEventMonitor;
     private EngineGui gui;
     private EngineLogger logger;
-
     private final Object agentObject;
     private IInternalAccess access;
-    private IMonitoringComponentFeature monitor;
-
-
-
+    private IBDIAgentFeature bdiFeature;
     private Engine engine;
-
     private JBDIEmoAgent emotionalAgent;
     private String[] emotionalOthers;
+    private MessageCenter messageCenter;
 
     @PlanAPI
     private IPlan plan;
 
-    public InitializeEmotionalEnginePlan(Object agent) {
+    public InitializeEmotionalEnginePlan(Object agent, Engine engine) {
         this.agentObject = agent;
         this.emotionalAgent = agent.getClass().getAnnotation(JBDIEmoAgent.class);
 
@@ -56,17 +57,18 @@ public class InitializeEmotionalEnginePlan {
 
         try {
             this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
+            this.bdiFeature = JBDIEmo.findAgentComponent(agent, IBDIAgentFeature.class);
         } catch (JBDIEmoException e) {
             e.printStackTrace();
         }
 
-        this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
+        this.engine = engine;
 
-        IArgumentsResultsFeature argumentFeature = access.getComponentFeature(IArgumentsResultsFeature.class);
-        engine = (Engine) argumentFeature.getArguments().get(R.ENGINE);
+        engine.setAgentName(access.getComponentIdentifier().getName());
+        engine.setAgentObject(agent);
 
-        setEngine(engine);
-
+        JBDIEmo.UserPlanParams.put(engine.getAgentName(), new LinkedHashMap<>());
+        JBDIEmo.UserGoalParams.put(engine.getAgentName(), new LinkedHashMap<>());
     }
 
     @PlanBody
@@ -74,7 +76,6 @@ public class InitializeEmotionalEnginePlan {
 
         agentModelMapper = new AgentModelMapper(agentObject, engine, access);
         platformOtherMapper = new PlatformOtherMapper(engine, access);
-        elementEventMonitor = new ElementEventMonitor(agentObject, engine);
 
         mapAgentModel();
         mapAgentOther();
@@ -83,7 +84,32 @@ public class InitializeEmotionalEnginePlan {
         initializeGui();
         initializeEngineLogger();
 
-        elementEventMonitor.subscribeForMonitoring();
+        messageCenter = new MessageCenter(agentObject, engine);
+
+        elementEventMonitor = new ElementEventMonitor(agentObject, engine, messageCenter);
+
+        elementEventMonitor.goalsAndPlansMonitoring();
+        elementEventMonitor.beliefMonitoring();
+        elementEventMonitor.beliefSetMonitoring();
+
+        ICommunicationService service = (ICommunicationService) access.getComponentFeature(IProvidedServicesFeature.class)
+                .getProvidedService(R.MESSAGE_SERVICE);
+
+        service.setEngine(new Future<>(engine)).get();
+
+        service.initialize(new Future<>(access), access.getComponentIdentifier()).addResultListener(new IResultListener<Void>() {
+            @Override
+            public void exceptionOccurred(Exception exception) {
+                exception.printStackTrace();
+            }
+
+            @Override
+            public void resultAvailable(Void result) {
+                System.err.println("MessageService initialized");
+
+                JBDIEmo.MessageListeners.add(access.getComponentIdentifier());
+            }
+        });
 
     }
 
@@ -127,8 +153,6 @@ public class InitializeEmotionalEnginePlan {
 
     private void initializeEngine() {
 
-        engine.setAgentName(access.getComponentIdentifier().getName());
-
         // Get decay time parameter from ADF if exists and set decay time in engine
 
         engine.setDecayDelay(emotionalAgent.decayTimeMillis());
@@ -152,7 +176,7 @@ public class InitializeEmotionalEnginePlan {
 
         // If guy parameter is true start gui
         if (isGui) {
-            gui = new EngineGui(this);
+            gui = new EngineGui(engine);
         }
 
     }
@@ -204,13 +228,7 @@ public class InitializeEmotionalEnginePlan {
         return gui;
     }
 
-    public Engine getEngine() {
-        return engine;
-    }
 
-    public void setEngine(Engine engine) {
-        this.engine = engine;
-    }
 
 
 }

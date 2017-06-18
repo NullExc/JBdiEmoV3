@@ -1,6 +1,10 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.features.IBDIAgentFeature;
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
+import jadex.bdiv3.model.BDIModel;
+import jadex.bdiv3.model.MCapability;
+import jadex.bdiv3.runtime.IBeliefListener;
 import jadex.bdiv3.runtime.IGoal;
 import jadex.bdiv3.runtime.impl.*;
 import jadex.bridge.IInternalAccess;
@@ -8,8 +12,9 @@ import jadex.bridge.component.IMonitoringComponentFeature;
 import jadex.bridge.service.types.monitoring.IMonitoringEvent;
 import jadex.bridge.service.types.monitoring.IMonitoringService;
 import jadex.commons.IFilter;
+import jadex.rules.eca.ChangeInfo;
+import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
@@ -37,29 +42,38 @@ public class ElementEventMonitor {
     private Map<String, Object[]> myActivePlans = Collections.synchronizedMap(new ConcurrentHashMap<String, Object[]>());
     private ParameterValueMapper params;
 
-    private final IInternalBDIAgentFeature bdiFeature;
+    private final IInternalBDIAgentFeature internalFeature;
+    private final IBDIAgentFeature bdiFeature;
+    private final BDIModel model;
+    private final MCapability capability;
 
-    public ElementEventMonitor(Object agent, Engine engine) {
+    public ElementEventMonitor(Object agent, Engine engine, MessageCenter center) {
 
         try {
             this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
+
         } catch (JBDIEmoException e) {
             e.printStackTrace();
         }
 
-        this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
-
         this.engine = engine;
 
-        bdiFeature = access.getComponentFeature(IInternalBDIAgentFeature.class);
+        this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
+
+        model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
+
+        capability = model.getCapability();
+
+        internalFeature = access.getComponentFeature(IInternalBDIAgentFeature.class);
+
+        bdiFeature = access.getComponentFeature(IBDIAgentFeature.class);
 
         params = new ParameterValueMapper(agent);
 
-        messageCenter = new MessageCenter(agent);
-
+        messageCenter = center;
     }
 
-    public void subscribeForMonitoring() {
+    public void goalsAndPlansMonitoring() {
 
         monitor.subscribeToEvents(new IFilter<IMonitoringEvent>() {
             public boolean filter(IMonitoringEvent event) {
@@ -76,19 +90,19 @@ public class ElementEventMonitor {
 
                     IInternalBDIAgentFeature bdiFeature = access.getComponentFeature(IInternalBDIAgentFeature.class);
 
-                    System.out.println(event + " " + Arrays.asList(bdiFeature.getCapability().getPlans()));
-
                     if (bdiInfo instanceof PlanInfo) {
                         handlePlanEvent(bdiInfo);
                     } else if (bdiInfo instanceof GoalInfo) {
                         handleGoalEvent(bdiInfo);
                     } else if (bdiInfo instanceof BeliefInfo) {
-                        handleBeliefEvent(bdiInfo);
+                       // handleBeliefEvent(bdiInfo);
                     }
                 }
                 return true;
             }
         }, true, IMonitoringService.PublishEventLevel.FINE);
+
+
     }
 
     public void handlePlanEvent(AbstractBDIInfo info) {
@@ -101,9 +115,15 @@ public class ElementEventMonitor {
 
         if (Arrays.asList(planNames).contains(planInfo.getType())) {
             String state = planInfo.getState();
-            if (state.equals("NEW")) {
+
+            if (state.equals(RPlan.PlanLifecycleState.NEW.name())) {
+
                 handlePlanAddedEvent();
-            } else if (state.equals("PASSED") || state.equals("ABORTED") || state.equals("FAILED")) {
+
+            } else if (state.equals(RPlan.PlanLifecycleState.PASSED.name()) ||
+                    state.equals(RPlan.PlanLifecycleState.ABORTED.name()) ||
+                    state.equals(RPlan.PlanLifecycleState.FAILED.name())) {
+
                 handlePlanFinishedEvent();
             }
         }
@@ -111,15 +131,31 @@ public class ElementEventMonitor {
 
     public void handleGoalEvent(AbstractBDIInfo info) {
 
-    }
+        GoalInfo goalInfo = (GoalInfo) info;
 
-    public void handleBeliefEvent(AbstractBDIInfo info) {
+        String[] goalNames = engine.getElementsNames(R.GOAL);
 
+        if (goalNames == null) return;
+
+        if (Arrays.asList(goalNames).contains(goalInfo.getType())) {
+
+            String lifeState = goalInfo.getLifecycleState();
+
+            if (lifeState.equals(IGoal.GoalLifecycleState.NEW.name()) ||
+                    lifeState.equals(IGoal.GoalLifecycleState.ADOPTED.name())) {
+
+                handleGoalAddedEvent();
+
+            } else if (lifeState.equals(IGoal.GoalLifecycleState.DROPPED.name())) {
+
+                handleGoalFinishedEvent();
+            }
+        }
     }
 
     private void handlePlanAddedEvent() {
 
-        for (RPlan plan : bdiFeature.getCapability().getPlans()) {
+        for (RPlan plan : internalFeature.getCapability().getPlans()) {
 
             String description = plan.getModelElement().getDescription();
 
@@ -129,14 +165,9 @@ public class ElementEventMonitor {
                 // Check if plan instance is new and fire plan added emotional event if is is
                 if (!myActivePlans.containsKey(plan.toString())) {
 
-                    System.err.println("<<<< Plan added to active plans! >>>> " + plan.getType());
-
                     // Check if plans reason is emotional goal
                     String reasonElementName = null;
                     // Get plan reason
-
-
-
                     RGoal reason = null;
 
                     if (plan.getReason() instanceof  RGoal) {
@@ -145,10 +176,8 @@ public class ElementEventMonitor {
 
                     if (reason != null) {
 
-                        System.err.println("REASON FOUNDED " + reason);
                         // Get emotional goal names (possible reasons)
                         for (String goalName : engine.getElementsNames(R.GOAL)) {
-
                             if (reason.getModelElement().getDescription().equals(goalName)) {
                                 reasonElementName = goalName;
                             }
@@ -160,24 +189,25 @@ public class ElementEventMonitor {
                     myActivePlans.put(plan.toString(), new Object[]{plan, reasonElementName});
 
                     // Get objectValue
-                    String elementName = plan.getModelElement().getName();
-                    Element element = engine.getElement(elementName, R.PLAN);
+
+                    Element element = engine.getElement(description, R.PLAN);
 
                     // Create emotional event
                     EmotionalEvent emotionalEvent = new EmotionalEvent();
 
                     // Set emotional event values
-                    emotionalEvent.setElementName(elementName);
+                    emotionalEvent.setElementName(description);
                     emotionalEvent.setEventType(R.EVT_PLAN_CREATED);
                     emotionalEvent.setResultType(R.RESULT_NULL);
-                    emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams.get(description).value()));
+                    emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams
+                            .get(engine.getAgentName()).get(description).value()));
                     emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
                     // Fire emotional event
                     element.processEmotionalEvent(emotionalEvent);
 
                     // Send emotional message
-                    messageCenter.sendEmotionalMessage(elementName, R.EVT_PLAN_CREATED, R.RESULT_NULL);
+                    messageCenter.sendEmotionalMessage(description, R.EVT_PLAN_CREATED, R.RESULT_NULL);
 
                 }
             }
@@ -186,15 +216,13 @@ public class ElementEventMonitor {
 
     private void handlePlanFinishedEvent() {
 
-        System.err.println("<<<< handled  finish plan event >>>> ");
-
         // Iterate plan instances stored in my active plan map to find if we have record of plan which is no longer active
         for (String myActivePlanKey : myActivePlans.keySet()) {
 
             boolean isStillActive = false;
 
             // Iterate currently active access plans
-            for (RPlan plan : bdiFeature.getCapability().getPlans()) {
+            for (RPlan plan : internalFeature.getCapability().getPlans()) {
                 // If plan instance stored in my active plan map is still currently active access plan break and continue
                 // with testing next plan instance stored in my active plan map
                 if (myActivePlanKey.equals(plan.toString()) ^ isPlanFinished(plan)) {
@@ -214,7 +242,7 @@ public class ElementEventMonitor {
                 myActivePlans.remove(myActivePlanKey);
 
                 // Get objectValue
-                String elementName = plan.getModelElement().getName();
+                String elementName = plan.getModelElement().getDescription();
                 Element element = engine.getElement(elementName, R.PLAN);
 
                 // Create emotional event
@@ -236,7 +264,7 @@ public class ElementEventMonitor {
                 emotionalEvent.setElementName(elementName);
                 emotionalEvent.setEventType(R.EVT_PLAN_FINISHED);
                 emotionalEvent.setResultType(planResult);
-                emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams
+                emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams.get(engine.getAgentName())
                         .get(plan.getModelElement().getDescription()).value()));
                 emotionalEvent.setSystemParameters(systemParams);
 
@@ -247,67 +275,37 @@ public class ElementEventMonitor {
                 messageCenter.sendEmotionalMessage(elementName, R.EVT_PLAN_FINISHED, planResult);
 
             }
-
         }
-
-    }
-
-    public void addGoalsForMonitoring() {
-
-        // Get goal objectValue names
-      /*  String[] goalNames = engine.getElementsNames(R.GOAL);
-
-        // Iterate goal objectValue names
-        if (goalNames != null) {
-            for (String goalName : goalNames) {
-
-                System.out.println("Goal added for monitoring: " + goalName);
-
-                // Add goal listener for goal added and goal finished events
-                parentPlan.getGoalbase().addGoalListener(goalName, new IGoalListener() {
-
-                    public void goalAdded(AgentEvent ae) {
-                        handleGoalAddedEvent();
-                    }
-
-
-                    public void goalFinished(AgentEvent ae) {
-                        handleGoalFinishedEvent();
-                    }
-                });
-
-            }
-        }*/
     }
 
     private void handleGoalAddedEvent() {
 
-        // Get currently active access goals
-       /* IGoal[] agentActiveGoals = parentPlan.getGoalbase().getGoals();
+        for (RGoal goal : internalFeature.getCapability().getGoals()) {
 
-        for (IGoal goal : agentActiveGoals) {
-
+            String description = goal.getModelElement().getDescription();
             // Check if goal is emotional (it's name is contained in emotional engine)
-            if (Arrays.asList(engine.getElementsNames(R.GOAL)).contains(goal.getModelElement().getName())) {
+            if (Arrays.asList(engine.getElementsNames(R.GOAL)).contains(description)) {
 
                 // Check if goal instance is new and fire goal added emotional event if it is
                 if (!myActiveGoals.containsKey(goal.toString())) {
 
+                    System.err.println("Adding goal " + description);
                     // Put new goal instance into active goal map to avoid multiple goal added events for one goal instance
                     myActiveGoals.put(goal.toString(), goal);
 
                     // Get objectValue
-                    String elementName = goal.getModelElement().getName();
-                    Element objectValue = engine.getElement(elementName, R.GOAL);
+
+                    Element objectValue = engine.getElement(description, R.GOAL);
 
                     // Create emotional event
                     EmotionalEvent emotionalEvent = new EmotionalEvent();
 
                     // Set emotional event values
-                    emotionalEvent.setElementName(elementName);
+                    emotionalEvent.setElementName(description);
                     emotionalEvent.setEventType(R.EVT_GOAL_CREATED);
                     emotionalEvent.setResultType(R.RESULT_NULL);
-                    emotionalEvent.setUserParameters(params.getUserParameterValues(goal));
+                    emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserGoalParams
+                            .get(engine.getAgentName()).get(description).value()));
                     emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
 
                     // Fire emotional event
@@ -315,13 +313,13 @@ public class ElementEventMonitor {
 
                 }
             }
-        }*/
+        }
     }
 
     private void handleGoalFinishedEvent() {
 
         // Get currently active access goals
-      /*  IGoal[] agentActiveGoals = parentPlan.getGoalbase().getGoals();
+        Collection<RGoal> agentActiveGoals = internalFeature.getCapability().getGoals();
 
         // Iterate goal instances stored in my active goal map to find if we have record of goal which is no longer active
         for (String myActiveGoalKey : myActiveGoals.keySet()) {
@@ -348,7 +346,7 @@ public class ElementEventMonitor {
                 myActiveGoals.remove(myActiveGoalKey);
 
                 // Get objectValue
-                String elementName = goal.getModelElement().getName();
+                String elementName = goal.getModelElement().getDescription();
                 Element objectValue = engine.getElement(elementName, R.GOAL);
 
                 // Create emotional event
@@ -366,46 +364,56 @@ public class ElementEventMonitor {
                 emotionalEvent.setElementName(elementName);
                 emotionalEvent.setEventType(R.EVT_GOAL_FINISHED);
                 emotionalEvent.setResultType(goalResult);
-                emotionalEvent.setUserParameters(params.getUserParameterValues(goal));
+                emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserGoalParams
+                        .get(engine.getAgentName()).get(elementName).value()));
                 emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
 
                 // Fire emotional event
                 objectValue.processEmotionalEvent(emotionalEvent);
 
             }
-
-        }*/
-
+        }
     }
 
-    public void addBeliefsForMonitoring() {
+    public void beliefMonitoring() {
 
+        String[] beliefNames = engine.getElementsNames(R.BELIEF);
 
-
-        // Get belief objectValue names
-       /* String[] beliefNames = engine.getElementsNames(R.BELIEF);
-
-        // Iterate plan objectValue names
         if (beliefNames != null) {
             for (String beliefName : beliefNames) {
 
                 System.out.println("Belief added for monitoring: " + beliefName);
 
-                // Add belief listener for belief changed events
-                parentPlan.getBeliefbase().getBelief(beliefName).addBeliefListener(new IBeliefListener() {
+                bdiFeature.addBeliefListener(beliefName, new IBeliefListener<EmotionalBelief>() {
+                    @Override
+                    public void beliefChanged(ChangeInfo<EmotionalBelief> changeInfo) {
+                        handleBeliefChangedEvent(changeInfo.getValue());
+                        //System.out.println("&&&&&&& beliefeChanged " + belief.getAttractionIntensity());
+                    }
 
-                    public void beliefChanged(AgentEvent ae) {
-                        handleBeliefChangedEvent((IBelief) ae.getSource());
+                    @Override
+                    public void factAdded(ChangeInfo<EmotionalBelief> changeInfo) {
+                        System.out.println("&&&&&&& factAdded ");
+                    }
+
+                    @Override
+                    public void factRemoved(ChangeInfo<EmotionalBelief> changeInfo) {
+                        System.out.println("&&&&&&& factRemoved ");
+                    }
+
+                    @Override
+                    public void factChanged(ChangeInfo<EmotionalBelief> changeInfo) {
+                        System.out.println("&&&&&&& factChanged " );
                     }
                 });
             }
-        }*/
+        }
     }
 
-    private void handleBeliefChangedEvent(EmotionalBelief belief) {
+    private void handleBeliefChangedEvent(EmotionalBelief emotionalBelief) {
 
-        // Get objectValue
-        String elementName = belief.beliefName();
+        // Get element
+        String elementName = emotionalBelief.getName();
         Element element = engine.getElement(elementName, R.BELIEF);
 
         // Create emotional event
@@ -417,92 +425,87 @@ public class ElementEventMonitor {
         emotionalEvent.setResultType(R.RESULT_NULL);
         emotionalEvent.setUserParameters(null);
         emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
-        emotionalEvent.setBeliefFamiliar(belief.isFamiliar());
-        emotionalEvent.setBeliefAttractive(belief.isAttractive());
-        emotionalEvent.setBeliefAttractionIntensity(belief.attractionIntensity());
+        emotionalEvent.setBeliefFamiliar(emotionalBelief.isFamiliar());
+        emotionalEvent.setBeliefAttractive(emotionalBelief.isAttractive());
+        emotionalEvent.setBeliefAttractionIntensity(emotionalBelief.getAttractionIntensity());
 
         // Fire emotional event
         element.processEmotionalEvent(emotionalEvent);
 
     }
 
-    public void addBeliefSetsForMonitoring() {
+    public void beliefSetMonitoring() {
+        String[] beliefNames = engine.getElementsNames(R.BELIEF_SET);
 
-        /*// Get belief objectValue names
-        String[] beliefSetNames = engine.getElementsNames(R.BELIEF_SET);
+        if (beliefNames != null) {
+            for (String beliefName : beliefNames) {
 
-        // Iterate plan objectValue names
-        if (beliefSetNames != null) {
-            for (String beliefSetName : beliefSetNames) {
+                System.out.println("BeliefSet added for monitoring: " + beliefName);
 
-                System.out.println("Belief set added for monitoring: " + beliefSetName);
-
-                // Add belief listener for belief changed events
-                parentPlan.getBeliefbase().getBeliefSet(beliefSetName).addBeliefSetListener(new IBeliefSetListener() {
-
-                    public void factChanged(AgentEvent ae) {
-
-                        handleFactChangedEvent((EmotionalBelief) ae.getValue());
+                bdiFeature.addBeliefListener(beliefName, new IBeliefListener<EmotionalBelief>() {
+                    @Override
+                    public void beliefChanged(ChangeInfo<EmotionalBelief> changeInfo) {
 
                     }
 
-                    public void factAdded(AgentEvent ae) {
-
-                        // Get information from event
-                        BeliefSetFlyweight beliefSet = (BeliefSetFlyweight) ae.getSource();
-                        String beliefSetName = beliefSet.getModelElement().getName();
-                        EmotionalBelief emotionalBelief = (EmotionalBelief) ae.getValue();
-
-                        // If belief and belief set name is valid
-                        if (emotionalBelief != null && beliefSetName != null) {
-
-                            // Add belief to engine
-                            engine.addElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF, beliefSetName);
-
-                            // Act like fact changed event because of adding new fact
+                    @Override
+                    public void factAdded(ChangeInfo<EmotionalBelief> changeInfo) {
+                        EmotionalBelief emotionalBelief = changeInfo.getValue();
+                        String beliefSet = emotionalBelief.getParent();
+                        System.out.println("&&&&&&& factAdded " + emotionalBelief.getName());
+                        if (beliefSet != null) {
+                            engine.addElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF, beliefSet);
                             handleFactChangedEvent(emotionalBelief);
                         }
-
                     }
 
-                    public void factRemoved(AgentEvent ae) {
-
-                        // Remove objectValue from the engine
-                        EmotionalBelief emotionalBelief = (EmotionalBelief) ae.getValue();
+                    @Override
+                    public void factRemoved(ChangeInfo<EmotionalBelief> changeInfo) {
+                        EmotionalBelief emotionalBelief = changeInfo.getValue();
+                        System.out.println("&&&&&&& factRemoved " + emotionalBelief.getName());
                         engine.removeElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF);
+                    }
 
+                    @Override
+                    public void factChanged(ChangeInfo<EmotionalBelief> changeInfo) {
+                        System.out.println("&&&&&&& factChanged " + changeInfo.getValue().getName());
+                        handleFactChangedEvent(changeInfo.getValue());
                     }
                 });
             }
-        }*/
+        }
     }
 
     private void handleFactChangedEvent(EmotionalBelief emotionalBelief) {
 
-        // Get objectValue
-        String elementName = emotionalBelief.beliefName();
+        // Get element
+        String elementName = emotionalBelief.getName();
         Element element = engine.getElement(elementName, R.BELIEF_SET_BELIEF);
 
-        // Check if objectValue is valid
+        // Check if element is valid
         if (element != null) {
 
             // Create emotional event
             EmotionalEvent emotionalEvent = new EmotionalEvent();
 
-            // Set emotional event values
-            emotionalEvent.setElementName(elementName);
-            emotionalEvent.setEventType(R.EVT_BELIEF_CHANGED);
-            emotionalEvent.setResultType(R.RESULT_NULL);
-            emotionalEvent.setUserParameters(null);
-            emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
-            emotionalEvent.setBeliefFamiliar(emotionalBelief.isFamiliar());
-            emotionalEvent.setBeliefAttractive(emotionalBelief.isAttractive());
-            emotionalEvent.setBeliefAttractionIntensity(emotionalBelief.attractionIntensity());
+            // Check if emotional belief is valid (was initialized properly)
+            if (emotionalBelief.isFamiliar() != null && emotionalBelief.isAttractive() != null && emotionalBelief.getAttractionIntensity() != null) {
 
-            // Fire emotional event
-            element.processEmotionalEvent(emotionalEvent);
+                // Set emotional event values
+                emotionalEvent.setElementName(elementName);
+                emotionalEvent.setEventType(R.EVT_BELIEF_CHANGED);
+                emotionalEvent.setResultType(R.RESULT_NULL);
+                emotionalEvent.setUserParameters(null);
+                emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
+                emotionalEvent.setBeliefFamiliar(emotionalBelief.isFamiliar());
+                emotionalEvent.setBeliefAttractive(emotionalBelief.isAttractive());
+                emotionalEvent.setBeliefAttractionIntensity(emotionalBelief.getAttractionIntensity());
+
+                System.err.println("Processing added or changed belief ... " + emotionalBelief.getName());
+                // Fire emotional event
+                element.processEmotionalEvent(emotionalEvent);
+            }
         }
-
     }
 
     public MessageCenter getMessageCenter() {
