@@ -3,11 +3,15 @@ package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul;
 import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.features.IBDIAgentFeature;
 import jadex.bdiv3.model.BDIModel;
+import jadex.bdiv3.runtime.ChangeEvent;
 import jadex.bdiv3.runtime.IPlan;
+import jadex.bdiv3.runtime.impl.RPlan;
+import jadex.bridge.IComponentStep;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
 import jadex.bridge.service.RequiredServiceInfo;
 import jadex.bridge.service.types.cms.IComponentManagementService;
+import jadex.commons.future.IFuture;
 import jadex.micro.annotation.*;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -35,8 +39,8 @@ import java.util.List;
 @Plans({@Plan(body = @Body(InitializeEmotionalEnginePlan.class)),
         @Plan(body = @Body(CallAnnaOutPlan.class)),
         @Plan(body = @Body(MetabolismServicePlan.class)),
-        @Plan(body = @Body(EatHealthyPlan.class)),
-        @Plan(body = @Body(EatUnhealthyPlan.class)),
+        @Plan(body = @Body(EatHealthyPlan.class), priority = 1),
+        @Plan(body = @Body(EatUnhealthyPlan.class), priority = 2),
         @Plan(body = @Body(DonateOldClothesPlan.class)),
         @Plan(body = @Body(SprayPaintBillboardPlan.class)),
         @Plan(body = @Body(ForgetOldEatenFoodPlan.class))
@@ -73,8 +77,8 @@ public class HungryPaulBDI {
 
     private Hunger hunger = new Hunger(0.5);
 
-    @Belief
-    private EmotionalBelief testBelief = new EmotionalBelief("testBelief", null, true, true, 0.9);
+    //@Belief
+    //private EmotionalBelief testBelief = new EmotionalBelief("testBelief", null, true, true, 0.9);
 
     public double probability = Math.random();
 
@@ -104,10 +108,7 @@ public class HungryPaulBDI {
 
         agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this, engine)).get();
 
-        testBelief = new EmotionalBelief("testBelief", null, true, true, 0.99);
-
         agentFeature.adoptPlan(new MetabolismServicePlan()).get();
-       // agentFeature.adoptPlan("metabolismServicePlan").get();
     }
 
     @EmotionalPlan({

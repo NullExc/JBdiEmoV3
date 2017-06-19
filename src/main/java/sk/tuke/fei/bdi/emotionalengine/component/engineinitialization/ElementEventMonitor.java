@@ -442,34 +442,40 @@ public class ElementEventMonitor {
 
                 System.out.println("BeliefSet added for monitoring: " + beliefName);
 
-                bdiFeature.addBeliefListener(beliefName, new IBeliefListener<EmotionalBelief>() {
+                bdiFeature.addBeliefListener(beliefName, new IBeliefListener<Object>() {
+
                     @Override
-                    public void beliefChanged(ChangeInfo<EmotionalBelief> changeInfo) {
+                    public void beliefChanged(ChangeInfo<Object> changeInfo) {
 
                     }
 
                     @Override
-                    public void factAdded(ChangeInfo<EmotionalBelief> changeInfo) {
-                        EmotionalBelief emotionalBelief = changeInfo.getValue();
-                        String beliefSet = emotionalBelief.getParent();
-                        System.out.println("&&&&&&& factAdded " + emotionalBelief.getName());
-                        if (beliefSet != null) {
-                            engine.addElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF, beliefSet);
-                            handleFactChangedEvent(emotionalBelief);
+                    public void factAdded(ChangeInfo<Object> changeInfo) {
+
+                        if (changeInfo.getValue() instanceof EmotionalBelief) {
+
+                            EmotionalBelief emotionalBelief = (EmotionalBelief) changeInfo.getValue();
+                            String beliefSet = emotionalBelief.getParent();
+
+                            if (beliefSet != null &&
+                                    engine.getElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF) == null) {
+
+                                engine.addElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF, beliefSet);
+                                handleFactChangedEvent(emotionalBelief);
+                            }
+
                         }
                     }
 
                     @Override
-                    public void factRemoved(ChangeInfo<EmotionalBelief> changeInfo) {
-                        EmotionalBelief emotionalBelief = changeInfo.getValue();
-                        System.out.println("&&&&&&& factRemoved " + emotionalBelief.getName());
+                    public void factRemoved(ChangeInfo<Object> changeInfo) {
+                        EmotionalBelief emotionalBelief = (EmotionalBelief) changeInfo.getValue();
                         engine.removeElement(emotionalBelief.getName(), R.BELIEF_SET_BELIEF);
                     }
 
                     @Override
-                    public void factChanged(ChangeInfo<EmotionalBelief> changeInfo) {
-                        System.out.println("&&&&&&& factChanged " + changeInfo.getValue().getName());
-                        handleFactChangedEvent(changeInfo.getValue());
+                    public void factChanged(ChangeInfo<Object> changeInfo) {
+                        handleFactChangedEvent((EmotionalBelief) changeInfo.getValue());
                     }
                 });
             }
@@ -501,15 +507,10 @@ public class ElementEventMonitor {
                 emotionalEvent.setBeliefAttractive(emotionalBelief.isAttractive());
                 emotionalEvent.setBeliefAttractionIntensity(emotionalBelief.getAttractionIntensity());
 
-                System.err.println("Processing added or changed belief ... " + emotionalBelief.getName());
                 // Fire emotional event
                 element.processEmotionalEvent(emotionalEvent);
             }
         }
-    }
-
-    public MessageCenter getMessageCenter() {
-        return messageCenter;
     }
 
     private boolean isPlanFinished(RPlan plan) {

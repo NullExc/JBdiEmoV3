@@ -21,7 +21,7 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 @EmotionalPlan({
         @EmotionalParameter(parameter = R.PARAM_APPROVAL, target = R.FIELD, fieldValue = "approval")
 })
-@Plan(trigger = @Trigger(goals = EatHealthyFood.class), priority = 2)
+@Plan(trigger = @Trigger(goals = EatHealthyFood.class))
 public class EatHealthyPlan {
 
     @PlanAPI
@@ -30,15 +30,10 @@ public class EatHealthyPlan {
     @PlanCapability
     HungryPaulBDI agent;
 
-    @PlanCapability
-    IInternalAccess access;
-
     @PlanBody
     public void body() {
 
         //waitFor(10000);
-
-        BDIModel model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
 
         Fridge fridge = agent.fridge; //(Fridge) getBeliefbase().getBelief("fridge").getFact();
 
@@ -67,8 +62,6 @@ public class EatHealthyPlan {
             int index = agent.food.indexOf(food);
 
             agent.food.set(index, food);
-
-            MBelief mBelief = new MBelief();
 
 
             Hunger hungerBelief = agent.getHunger();//(Hunger) getBeliefbase().getBelief("hunger").getFact();

@@ -1,9 +1,6 @@
 package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal;
 
-import jadex.bdiv3.annotation.Deliberation;
-import jadex.bdiv3.annotation.Goal;
-import jadex.bdiv3.annotation.GoalCreationCondition;
-import jadex.bdiv3.annotation.RawEvent;
+import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.runtime.ChangeEvent;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
@@ -17,6 +14,8 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 public class CampaignAgainstJunkFood {
 
     private int localId;
+
+    private static boolean active;
 
     @EmotionalGoal({
             @EmotionalParameter(parameter = R.PARAM_OTHER_DESIRE_GOAL_FAILURE, target = R.FIELD, fieldValue = "otherDesireFailure"),
@@ -38,12 +37,17 @@ public class CampaignAgainstJunkFood {
 
         if (intensity > 0.25) {
 
-            System.out.println("CampaignAgainstJunkFood created " + intensity);
-
-            return new CampaignAgainstJunkFood((int) intensity);
+            if (!active) {
+                active = true;
+                return new CampaignAgainstJunkFood((int) intensity);
+            }
         }
-
         return null;
+    }
+
+    @GoalFinished
+    public void finished() {
+        active = false;
     }
 
     @Override

@@ -11,13 +11,15 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 /**
  * Created by PeterZemianek on 5/25/2017.
  */
-@Goal(deliberation = @Deliberation(cardinalityone = true, inhibits = FindDate.class))
+@Goal(unique = true, deliberation = @Deliberation(cardinalityone = true))
 public class FindDate {
 
     @GoalAPI
     protected IGoal goal;
 
     private int localId;
+
+    private static boolean active;
 
     @EmotionalGoal(value = {
             @EmotionalParameter(parameter = R.PARAM_PROBABILITY, target = R.FIELD, fieldValue = "probability"),
@@ -37,10 +39,18 @@ public class FindDate {
         double intensity = agent.engine.getElement("advertiseBioFoodStore", R.PLAN).getEmotion(R.GRATITUDE).getIntensity();
         //0.75
         if (intensity > 0.4) {
-            return new FindDate((int) intensity);
+            if (!active) {
+                active = true;
+                return new FindDate((int) intensity);
+            }
         }
 
         return null;
+    }
+
+    @GoalFinished
+    public void finish() {
+        active = false;
     }
 
     @Override

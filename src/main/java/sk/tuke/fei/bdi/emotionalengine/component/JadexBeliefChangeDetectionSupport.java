@@ -36,7 +36,7 @@ public class JadexBeliefChangeDetectionSupport {
     }
 
     public synchronized void fireBeliefChange() {
-        pcs.firePropertyChange("propertyChangeHelper", Boolean.valueOf(false), Boolean.valueOf(true));
+        pcs.firePropertyChange("propertyChangeHelper", false, true);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

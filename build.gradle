@@ -1,6 +1,6 @@
 apply plugin: 'java'
 
-def jadex_version	= "3.0.43"
+def jadex_version	= "3.0.69"
 
 dependencies {
 	compile 'org.activecomponents.jadex:jadex-distribution-standard:'+jadex_version

@@ -25,11 +25,12 @@ public class ForgetOldEatenFood {
     @GoalCreationCondition(rawevents = {@RawEvent(value = ChangeEvent.FACTCHANGED, second = "food")})
     public static ForgetOldEatenFood creationCondition(EmotionalBelief belief) {
 
-        System.err.println("$$$$$$ ForgetOldEatenFood trying to trigger ... " + belief.getName());
-
         if (belief instanceof MyFoodEmotionalBelief) {
             MyFoodEmotionalBelief foodBelief = (MyFoodEmotionalBelief) belief;
-            if (foodBelief.isEaten()) return new ForgetOldEatenFood(foodBelief);
+            if (foodBelief.isEaten()) {
+
+                return new ForgetOldEatenFood(foodBelief);
+            }
         }
 
         return null;

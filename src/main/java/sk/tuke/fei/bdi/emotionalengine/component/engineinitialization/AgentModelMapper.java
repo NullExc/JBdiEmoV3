@@ -160,15 +160,20 @@ public class AgentModelMapper {
 
                 while (iterator.hasNext()) {
 
-                    EmotionalBelief elementBelief = (EmotionalBelief) iterator.next();
+                    Object object = iterator.next();
 
-                    if (belief.getName() != null && !belief.getName().equals("")) {
+                    if (object instanceof EmotionalBelief) {
 
-                        // Add element corresponding to particular belief into emotional engine
-                        engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, belief.getName());
+                        EmotionalBelief elementBelief = (EmotionalBelief) object;
 
-                        // Increment belief count
-                        beliefCount++;
+                        if (belief.getName() != null && !belief.getName().equals("")) {
+
+                            // Add element corresponding to particular belief into emotional engine
+                            engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, belief.getName());
+
+                            // Increment belief count
+                            beliefCount++;
+                        }
                     }
                 }
             }

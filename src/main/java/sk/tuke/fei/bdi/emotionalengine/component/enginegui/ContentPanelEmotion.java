@@ -96,10 +96,6 @@ public class ContentPanelEmotion extends JPanel {
                     @Override
                     public void propertyChange(PropertyChangeEvent evt) {
 
-                        if (emotion.getEmotionId() == R.LOVE) {
-                            System.err.println("updating LOVE " + emotion.getIntensity());
-                        }
-
                         emotionIntensity.setText("" + MyMath.roundDouble(emotion.getIntensity(), 4));
                         emotionIntensityMeter.setValue((int) (MyMath.roundDouble(emotion.getIntensity() * 100, 4)));
 

@@ -18,6 +18,8 @@ public class EatHealthyFood {
 
     private int id;
 
+    private static boolean active;
+
     @EmotionalGoal({
             @EmotionalParameter(parameter = R.PARAM_DESIRABILITY, target = R.FIELD, fieldValue = "eatHealthyFoodDesirability")
     })
@@ -34,10 +36,17 @@ public class EatHealthyFood {
     public static EatHealthyFood creationCondition(Hunger hunger) {
 
         if (hunger.getHungerValue() > ((Math.random() * 0.4) + 0.4)) {
-            return new EatHealthyFood(hunger);
+            if (!active) {
+                active = true;
+                return new EatHealthyFood(hunger);
+            }
         }
-
         return null;
+    }
+
+    @GoalFinished
+    public void finished() {
+        active = false;
     }
 
     @Override

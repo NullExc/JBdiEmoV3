@@ -18,7 +18,7 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 @EmotionalPlan({
         @EmotionalParameter(parameter = R.PARAM_DISAPPROVAL, target = R.FIELD, fieldValue = "disapproval")
 })
-@Plan(trigger = @Trigger(goals = EatHealthyFood.class), priority = 1)
+@Plan(trigger = @Trigger(goals = EatHealthyFood.class))
 public class EatUnhealthyPlan {
 
     @PlanAPI
@@ -51,6 +51,10 @@ public class EatUnhealthyPlan {
         }
 
         food.updateBelief(true, null, adjustedAttractionIntensity);
+
+        int index = agent.food.indexOf(food);
+
+        agent.food.set(index, food);
 
         Hunger hungerBelief = agent.getHunger();//(Hunger) getBeliefbase().getBelief("hunger").getFact();
         double hunger = hungerBelief.getHungerValue();
