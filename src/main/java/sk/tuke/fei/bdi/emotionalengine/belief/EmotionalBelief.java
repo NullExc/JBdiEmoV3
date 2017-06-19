@@ -35,6 +35,11 @@ public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
         return name;
     }
 
+    /**
+     * Get name of BeliefSet which contains this Belief
+     *
+     * @return Name of parent Beliefset
+     */
     public String getParent() {
         return parent;
     }

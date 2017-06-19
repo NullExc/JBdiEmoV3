@@ -6,6 +6,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Class or method annotated by EmotionalPlan is recognized as Emotional Plan for JBdiEmo
+ *
  * @author Peter Zemianek
  */
 @Target({ElementType.TYPE, ElementType.METHOD})
@@ -14,10 +16,4 @@ public @interface EmotionalPlan {
 
     public EmotionalParameter[] value() default {};
 
-   /* public double approval() default  0;
-    public double disapproval() default  0;
-    public double desirability() default 0;
-    public String emotionalOther() default "";
-    public String emotionalOtherPlan() default "";
-    public boolean emotionalOtherGroup() default false;*/
 }

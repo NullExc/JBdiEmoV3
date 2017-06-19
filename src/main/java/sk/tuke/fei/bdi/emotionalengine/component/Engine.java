@@ -1,19 +1,14 @@
 package sk.tuke.fei.bdi.emotionalengine.component;
 
 import jadex.bridge.IComponentIdentifier;
+import jadex.commons.beans.PropertyChangeEvent;
+import jadex.commons.beans.PropertyChangeListener;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Mood;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Negative;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.mood.Positive;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalBelief;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeEvent;
 import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 

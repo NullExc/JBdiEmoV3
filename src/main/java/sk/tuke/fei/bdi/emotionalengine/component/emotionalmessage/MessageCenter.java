@@ -5,7 +5,6 @@ import jadex.bdiv3.model.MCapability;
 import jadex.bdiv3.model.MPlan;
 import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.IInternalAccess;
-import jadex.bridge.component.IArgumentsResultsFeature;
 import jadex.bridge.service.search.SServiceProvider;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.IResultListener;
@@ -35,8 +34,7 @@ public class MessageCenter {
     private final Engine engine;
     private final BDIModel model;
     private final MCapability capability;
-
-    private ParameterValueMapper params;
+    private final ParameterValueMapper params;
 
     public MessageCenter(Object agent, Engine engine) {
 
@@ -109,9 +107,7 @@ public class MessageCenter {
                         message.put(R.KEY_SENDER_ID, access.getComponentIdentifier().getLocalName());
                         message.put(R.KEY_PLAN_NAME, planName);
 
-                        //System.err.println("<<< MESSAGE " + message + " SENT FROM " + access.getComponentIdentifier().getLocalName());
-
-                        IFuture<Void> recieve = result.messageRecieved(message);
+                        IFuture<Void> recieve = result.messageReceived(message);
                         recieve.addResultListener(new IResultListener<Void>() {
                             @Override
                             public void exceptionOccurred(Exception exception) {
@@ -259,14 +255,6 @@ public class MessageCenter {
 
             // Send emotional event to its respective element
             element.processEmotionalEvent(emotionalEvent);
-
-            //System.err.println("<<<< MESSAGE RECIEVED! " + userParameters + params.getSystemParameterValues(element) +
-            //        " TO : " + access.getComponentIdentifier().getLocalName());
-
-
         }
-
     }
-
-
 }

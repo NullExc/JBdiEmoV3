@@ -30,18 +30,17 @@ import java.util.Set;
 
 public class PlatformOtherMapper implements Runnable {
 
-    private Engine engine;
     private Set<String> emotionalOtherNames;
 
     private boolean isRunning = false;
     private final IInternalAccess access;
+    private final Engine engine;
 
     public PlatformOtherMapper(Engine engine, IInternalAccess access) {
         this.engine = engine;
         this.access = access;
 
         new Thread(this).start();
-
     }
 
     public void run() {

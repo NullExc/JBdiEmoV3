@@ -8,10 +8,7 @@ import jadex.commons.future.IFuture;
 import jadex.commons.future.IResultListener;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage.MessageCenter;
-import sk.tuke.fei.bdi.emotionalengine.res.R;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -19,8 +16,6 @@ import java.util.Map;
  */
 @Service
 public class CommunicationService implements ICommunicationService {
-
-    private List<Map<String, String>> messages = new ArrayList<Map<String, String>>();
 
     private MessageCenter messageCenter;
 
@@ -40,14 +35,11 @@ public class CommunicationService implements ICommunicationService {
         access.addResultListener(new IResultListener<IInternalAccess>() {
             @Override
             public void exceptionOccurred(Exception exception) {
-                //throw new JBDIEmoException(exception);
+
             }
 
             @Override
             public void resultAvailable(IInternalAccess result) {
-
-                System.err.println(engine.getAgentName() + " Engine obtained " + engine.getElements(R.PLAN).length + " emotional plans");
-
 
                 messageCenter = new MessageCenter(result, engine);
             }
@@ -56,17 +48,8 @@ public class CommunicationService implements ICommunicationService {
         return IFuture.DONE;
     }
 
-    public IFuture<Void> sendMessage(Map<String, String> message) {
-        messages.add(message);
-        return IFuture.DONE;
-    }
-
-    public IFuture<List<Map<String, String>>> getMessages() {
-        return new Future<List<Map<String, String>>>(messages);
-    }
-
     @Override
-    public IFuture<Void> messageRecieved(Map<String, String> message) {
+    public IFuture<Void> messageReceived(Map<String, String> message) {
         messageCenter.recieveMessages(message);
         return IFuture.DONE;
     }

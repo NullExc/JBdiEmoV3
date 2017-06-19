@@ -3,8 +3,6 @@ package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 import jadex.bdiv3.model.*;
 import jadex.bridge.IInternalAccess;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
-import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
-import sk.tuke.fei.bdi.emotionalengine.parser.BeliefMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
@@ -12,12 +10,9 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 
 /**
  * @author Tomáš Herich
@@ -150,6 +145,8 @@ public class AgentModelMapper {
                         System.out.println("Belief name doesn't match EmotionalBelief name: " + belief.getName() + ", " + emotionalBelief.getName());
                     }
                 }
+                //BDI v3 doesn't support BeliefSet, so we have to check if this belief is a Collection,
+                // to save it as BeliefSet in JBdiEmo
             } else if (belief.getValue(access) instanceof Collection<?>) {
 
                 Collection<EmotionalBelief> collection = (Collection<EmotionalBelief>) belief.getValue(access);
