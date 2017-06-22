@@ -66,6 +66,7 @@ public class PlatformOtherMapper implements Runnable {
                     for (String emotionalOtherName : getEmotionalOtherNames()) {
 
                         if (componentName.matches(emotionalOtherName + ".*")) {
+                          //  System.out.println(emotionalOtherName + componentName);
                             isComponentEmotionalOther = true;
                         }
                     }

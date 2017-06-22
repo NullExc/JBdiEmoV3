@@ -48,7 +48,7 @@ public class InitializeEmotionalEnginePlan {
         this.agentObject = agent;
         this.emotionalAgent = agent.getClass().getAnnotation(JBDIEmoAgent.class);
 
-        this.emotionalOthers = emotionalAgent.others().split(R.MESSAGE_DELIMITER);
+        this.emotionalOthers = emotionalAgent.others().split(",");
 
         try {
             this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
@@ -135,6 +135,7 @@ public class InitializeEmotionalEnginePlan {
 
             // Set emotional other names to other mapper for further ADF mapping
             // Other mapper will try to find emotional other agents on current platform
+            System.err.println(Arrays.asList(otherNames));
             platformOtherMapper.setEmotionalOtherNames(new HashSet<String>(Arrays.asList(otherNames)));
 
             // Run thread in other mapper to search current platform for defined emotional other agentClass names
