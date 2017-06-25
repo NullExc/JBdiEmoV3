@@ -22,19 +22,17 @@ import java.util.Iterator;
 public class AgentModelMapper {
 
     private final Class agentClass;
-    private final Object agentObject;
     private final Engine engine;
     private final IInternalAccess access;
-    private final BDIModel model;
     private final MCapability capability;
 
-    public AgentModelMapper(Object agent, Engine engine, IInternalAccess access) {
-        this.agentObject = agent;
+    public AgentModelMapper(Object agent, IInternalAccess access) {
+
         this.agentClass = agent.getClass();
-        this.engine = engine;
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
         this.access = access;
 
-        model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
+        BDIModel model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
         capability = model.getCapability();
     }
 
@@ -147,10 +145,13 @@ public class AgentModelMapper {
                 }
                 //BDI v3 doesn't support BeliefSet, so we have to check if this belief is a Collection,
                 // to save it as BeliefSet in JBdiEmo
-            } else if (belief.getValue(access) instanceof Collection<?>) {
+            } else if (belief.getValue(access) instanceof Collection) {
 
                 Collection<EmotionalBelief> collection = (Collection<EmotionalBelief>) belief.getValue(access);
 
+                if (collection.getClass().getComponentType() != null) {
+                    System.err.println(collection.getClass().getComponentType().isAssignableFrom(EmotionalBelief.class));
+                }
                 engine.addElement(belief.getName(), R.BELIEF_SET);
 
                 Iterator iterator = collection.iterator();

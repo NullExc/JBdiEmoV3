@@ -5,5 +5,5 @@ package sk.tuke.fei.bdi.emotionalengine.component.emotionalevent;
  */
 
 public interface EmotionalEventListener {
-    public void eventHappened(EmotionalEvent event);
+    void eventHappened(EmotionalEvent event);
 }

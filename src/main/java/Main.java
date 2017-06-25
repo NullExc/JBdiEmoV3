@@ -1,9 +1,3 @@
-
-
-import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
-
-import java.util.*;
-
 /**
  * @author Peter Zemianek
  */

@@ -1,11 +1,8 @@
 package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.plan;
 
 import jadex.bdiv3.annotation.*;
-import jadex.bdiv3.model.BDIModel;
-import jadex.bdiv3.model.MBelief;
 import jadex.bdiv3.runtime.IPlan;
 import jadex.bdiv3.runtime.impl.PlanFailureException;
-import jadex.bridge.IInternalAccess;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Fridge;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Hunger;

@@ -2,7 +2,6 @@ package sk.tuke.fei.bdi.emotionalengine.component.emotion.belief;
 
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
-import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 /**
  * @author Tomáš Herich

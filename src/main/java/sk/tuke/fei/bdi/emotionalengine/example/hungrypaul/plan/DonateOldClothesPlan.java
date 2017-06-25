@@ -3,8 +3,6 @@ package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.plan;
 import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.runtime.IPlan;
 import jadex.bdiv3.runtime.impl.PlanFailureException;
-import jadex.bpmn.model.task.annotation.TaskResult;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.CommunityVolunteering;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;

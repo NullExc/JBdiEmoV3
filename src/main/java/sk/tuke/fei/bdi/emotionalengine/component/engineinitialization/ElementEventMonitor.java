@@ -2,6 +2,7 @@ package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
 import jadex.bdiv3.features.IBDIAgentFeature;
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
+import jadex.bdiv3.model.BDIModel;
 import jadex.bdiv3.runtime.IBeliefListener;
 import jadex.bdiv3.runtime.IGoal;
 import jadex.bdiv3.runtime.impl.*;
@@ -45,7 +46,7 @@ public class ElementEventMonitor {
     private final MessageCenter messageCenter;
     private final ParameterValueMapper params;
 
-    public ElementEventMonitor(Object agent, Engine engine, MessageCenter center) {
+    public ElementEventMonitor(Object agent, MessageCenter center) {
 
         try {
             this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
@@ -53,7 +54,7 @@ public class ElementEventMonitor {
             e.printStackTrace();
         }
 
-        this.engine = engine;
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
 
         this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
 

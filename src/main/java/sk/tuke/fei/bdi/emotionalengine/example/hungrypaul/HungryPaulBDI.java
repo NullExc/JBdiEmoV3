@@ -2,16 +2,11 @@ package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul;
 
 import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.features.IBDIAgentFeature;
-import jadex.bdiv3.model.BDIModel;
-import jadex.bdiv3.runtime.ChangeEvent;
 import jadex.bdiv3.runtime.IPlan;
-import jadex.bdiv3.runtime.impl.RPlan;
-import jadex.bridge.IComponentStep;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
 import jadex.bridge.service.RequiredServiceInfo;
 import jadex.bridge.service.types.cms.IComponentManagementService;
-import jadex.commons.future.IFuture;
 import jadex.micro.annotation.*;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -19,7 +14,6 @@ import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Fridge;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Hunger;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.*;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.plan.*;
-import sk.tuke.fei.bdi.emotionalengine.helper.MyMath;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.JBDIEmoAgent;
@@ -72,13 +66,14 @@ public class HungryPaulBDI {
     public Engine engine = new Engine();
     @Belief
     public Fridge fridge = new Fridge();
+
     @Belief
     public List<EmotionalBelief> food = new ArrayList<>();
 
-    private Hunger hunger = new Hunger(0.5);
+    @Belief
+    public List<String> test = new ArrayList<>();
 
-    //@Belief
-    //private EmotionalBelief testBelief = new EmotionalBelief("testBelief", null, true, true, 0.9);
+    private Hunger hunger = new Hunger(0.5);
 
     public double probability = Math.random();
 
@@ -106,7 +101,7 @@ public class HungryPaulBDI {
     @AgentBody
     public void body() {
 
-        agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this, engine)).get();
+        agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this)).get();
 
         agentFeature.adoptPlan(new MetabolismServicePlan()).get();
     }

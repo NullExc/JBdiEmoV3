@@ -8,7 +8,7 @@ import java.util.Set;
 
 public interface EmotionFactory {
 
-    public Emotion getEmotion(int emotionId);
-    public Set<Emotion> getPossibleEmotions();
+    Emotion getEmotion(int emotionId);
+    Set<Emotion> getPossibleEmotions();
 
 }

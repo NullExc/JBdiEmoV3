@@ -32,11 +32,10 @@ public class MessageCenter {
 
     private IInternalAccess access = null;
     private final Engine engine;
-    private final BDIModel model;
     private final MCapability capability;
     private final ParameterValueMapper params;
 
-    public MessageCenter(Object agent, Engine engine) {
+    public MessageCenter(Object agent) {
 
 
         if (agent instanceof IInternalAccess) {
@@ -53,9 +52,10 @@ public class MessageCenter {
 
         }
 
-        this.engine = engine;
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel())
+                .getCapability().getBelief("engine").getValue(access);
 
-        model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
+        BDIModel model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
         capability = model.getCapability();
 
         params = new ParameterValueMapper(engine.getAgentObject());

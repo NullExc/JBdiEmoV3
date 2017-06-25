@@ -3,7 +3,7 @@ package sk.tuke.fei.bdi.emotionalengine.plan;
 
 import jadex.bdiv3.annotation.Plan;
 import jadex.bdiv3.annotation.PlanBody;
-import jadex.bdiv3.features.IBDIAgentFeature;
+import jadex.bdiv3.model.BDIModel;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.service.component.IProvidedServicesFeature;
 import jadex.commons.future.Future;
@@ -31,20 +31,17 @@ import java.util.LinkedHashMap;
 @Plan
 public class InitializeEmotionalEnginePlan {
 
+
+    private IInternalAccess access;
+
     private AgentModelMapper agentModelMapper;
     private PlatformOtherMapper platformOtherMapper;
-    private ElementEventMonitor elementEventMonitor;
-    private EngineGui gui;
-    private EngineLogger logger;
     private Object agentObject;
-    private IInternalAccess access;
-    private IBDIAgentFeature bdiFeature;
     private Engine engine;
     private JBDIEmoAgent emotionalAgent;
     private String[] emotionalOthers;
-    private MessageCenter messageCenter;
 
-    public InitializeEmotionalEnginePlan(Object agent, Engine engine) {
+    public InitializeEmotionalEnginePlan(Object agent) {
         this.agentObject = agent;
         this.emotionalAgent = agent.getClass().getAnnotation(JBDIEmoAgent.class);
 
@@ -52,12 +49,12 @@ public class InitializeEmotionalEnginePlan {
 
         try {
             this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
-            this.bdiFeature = JBDIEmo.findAgentComponent(agent, IBDIAgentFeature.class);
         } catch (JBDIEmoException e) {
             e.printStackTrace();
         }
 
-        this.engine = engine;
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel())
+                .getCapability().getBelief("engine").getValue(access);
 
         engine.setAgentName(access.getComponentIdentifier().getName());
         engine.setAgentObject(agent);
@@ -69,8 +66,8 @@ public class InitializeEmotionalEnginePlan {
     @PlanBody
     public void body() {
 
-        agentModelMapper = new AgentModelMapper(agentObject, engine, access);
-        platformOtherMapper = new PlatformOtherMapper(engine, access);
+        agentModelMapper = new AgentModelMapper(agentObject, access);
+        platformOtherMapper = new PlatformOtherMapper(access);
 
         mapAgentModel();
         mapAgentOther();
@@ -79,9 +76,9 @@ public class InitializeEmotionalEnginePlan {
         initializeGui();
         initializeEngineLogger();
 
-        messageCenter = new MessageCenter(agentObject, engine);
+        MessageCenter messageCenter = new MessageCenter(agentObject);
 
-        elementEventMonitor = new ElementEventMonitor(agentObject, engine, messageCenter);
+        ElementEventMonitor elementEventMonitor = new ElementEventMonitor(agentObject, messageCenter);
 
         elementEventMonitor.goalsAndPlansMonitoring();
         elementEventMonitor.beliefMonitoring();
@@ -90,20 +87,18 @@ public class InitializeEmotionalEnginePlan {
         ICommunicationService service = (ICommunicationService) access.getComponentFeature(IProvidedServicesFeature.class)
                 .getProvidedService(R.MESSAGE_SERVICE);
 
-        service.setEngine(new Future<>(engine)).get();
+        service.initialize(new Future<>(access), access.getComponentIdentifier()).
+                addResultListener(new IResultListener<Void>() {
+                    @Override
+                    public void exceptionOccurred(Exception exception) {
+                        exception.printStackTrace();
+                    }
 
-        service.initialize(new Future<>(access), access.getComponentIdentifier()).addResultListener(new IResultListener<Void>() {
-            @Override
-            public void exceptionOccurred(Exception exception) {
-                exception.printStackTrace();
-            }
-
-            @Override
-            public void resultAvailable(Void result) {
-                JBDIEmo.MessageListeners.add(access.getComponentIdentifier());
-            }
-        });
-
+                    @Override
+                    public void resultAvailable(Void result) {
+                        JBDIEmo.MessageListeners.add(access.getComponentIdentifier());
+                    }
+                });
     }
 
     private void mapAgentModel() {
@@ -125,9 +120,7 @@ public class InitializeEmotionalEnginePlan {
 
         // Get emotional other names parameter from ADF if exists
         if (emotionalOthers.length != 0) {
-
             otherNames = emotionalOthers;
-
         }
 
         // If other names are valid
@@ -140,9 +133,7 @@ public class InitializeEmotionalEnginePlan {
 
             // Run thread in other mapper to search current platform for defined emotional other agentClass names
             platformOtherMapper.setRunning(true);
-
         }
-
     }
 
     private void initializeEngine() {
@@ -155,18 +146,17 @@ public class InitializeEmotionalEnginePlan {
 
         // Set engine initialized
         engine.setInitialized(true);
-
     }
 
     private void initializeGui() {
 
-        boolean isGui = false;
+        boolean isGui;
 
         isGui = emotionalAgent.guiEnabled();
 
         // If guy parameter is true start gui
         if (isGui) {
-            gui = new EngineGui(engine);
+            EngineGui gui = new EngineGui(engine);
         }
     }
 
@@ -181,8 +171,7 @@ public class InitializeEmotionalEnginePlan {
 
         // If logger parameter is true start logging
         if (isLogger) {
-            logger = new EngineLogger(loggingDelayMillis, engine);
+            EngineLogger logger = new EngineLogger(loggingDelayMillis, engine);
         }
-
     }
 }

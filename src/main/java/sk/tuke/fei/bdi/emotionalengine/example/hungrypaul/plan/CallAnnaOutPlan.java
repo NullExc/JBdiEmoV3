@@ -6,7 +6,6 @@ import jadex.bdiv3.annotation.PlanBody;
 import jadex.bdiv3.annotation.Trigger;
 import jadex.bdiv3.runtime.IPlan;
 import jadex.bdiv3.runtime.impl.PlanFailureException;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.FindDate;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;

@@ -6,7 +6,7 @@ package sk.tuke.fei.bdi.emotionalengine.component.emotion.calculators;
 
 public interface Calculator {
 
-    public String getName();
-    public double calculateValue(double value);
+    String getName();
+    double calculateValue(double value);
 
 }

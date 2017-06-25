@@ -32,7 +32,6 @@ public class EmotionIntensityLogger {
     private File file;
     private Engine engine;
     private Document doc;
-    private Timer timer;
     private int loggingDelayMillis = 1000;
 
     public EmotionIntensityLogger(Integer loggingDelayMillis, File file, Engine engine) {
@@ -309,7 +308,7 @@ public class EmotionIntensityLogger {
     private void createSaveTimer() {
 
         // Update xml file on specified delay
-        timer = new Timer(loggingDelayMillis, new ActionListener() {
+        Timer timer = new Timer(loggingDelayMillis, new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
 

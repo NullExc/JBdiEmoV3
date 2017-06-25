@@ -11,7 +11,6 @@ package sk.tuke.fei.bdi.emotionalengine.component.enginegui;
    
 */
 
-import org.omg.Messaging.SYNC_WITH_TRANSPORT;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.helper.MyMath;
@@ -29,7 +28,6 @@ import jadex.commons.beans.PropertyChangeEvent;
 public class EngineGui extends JFrame implements ActionListener {
 
     private Engine engine;
-    private Toolbar toolbar;
     private TabsContainer tabsContainer;
 
     private boolean isGuiInitialized = false;
@@ -143,7 +141,7 @@ public class EngineGui extends JFrame implements ActionListener {
     }
 
     private void initializeToolbar() {
-        toolbar = new Toolbar();
+        Toolbar toolbar = new Toolbar();
         toolbar.addToolbarToParent(this);
 
         // Add Gui as action listener to toolbar buttons

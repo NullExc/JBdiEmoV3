@@ -1,9 +1,7 @@
 package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal;
 
 import jadex.bdiv3.annotation.*;
-import jadex.bdiv3.model.MProcessableElement;
 import jadex.bdiv3.runtime.ChangeEvent;
-import jadex.commons.SUtil;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;

@@ -1,9 +1,9 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.model.BDIModel;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.service.component.IRequiredServicesFeature;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
-import sk.tuke.fei.bdi.emotionalengine.plan.InitializeEmotionalEnginePlan;
 
 /*
 
@@ -36,8 +36,8 @@ public class PlatformOtherMapper implements Runnable {
     private final IInternalAccess access;
     private final Engine engine;
 
-    public PlatformOtherMapper(Engine engine, IInternalAccess access) {
-        this.engine = engine;
+    public PlatformOtherMapper(IInternalAccess access) {
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
         this.access = access;
 
         new Thread(this).start();

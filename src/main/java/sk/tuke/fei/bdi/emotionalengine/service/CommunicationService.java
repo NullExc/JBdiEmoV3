@@ -6,7 +6,6 @@ import jadex.bridge.service.annotation.Service;
 import jadex.commons.future.Future;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.IResultListener;
-import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage.MessageCenter;
 
 import java.util.Map;
@@ -20,12 +19,6 @@ public class CommunicationService implements ICommunicationService {
     private MessageCenter messageCenter;
 
     private IComponentIdentifier cid;
-
-    private Engine engine;
-
-    public CommunicationService() {
-
-    }
 
     @Override
     public IFuture<Void> initialize(IFuture<IInternalAccess> access, IComponentIdentifier cid) {
@@ -41,7 +34,7 @@ public class CommunicationService implements ICommunicationService {
             @Override
             public void resultAvailable(IInternalAccess result) {
 
-                messageCenter = new MessageCenter(result, engine);
+                messageCenter = new MessageCenter(result);
             }
         });
 
@@ -59,9 +52,5 @@ public class CommunicationService implements ICommunicationService {
         return new Future<>(cid);
     }
 
-    @Override
-    public IFuture<Void> setEngine(IFuture<Engine> engine) {
-        this.engine = engine.get();
-        return IFuture.DONE;
-    }
+
 }

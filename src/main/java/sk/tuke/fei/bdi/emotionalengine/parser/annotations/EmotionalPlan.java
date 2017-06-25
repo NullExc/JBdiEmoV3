@@ -14,6 +14,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EmotionalPlan {
 
-    public EmotionalParameter[] value() default {};
+    EmotionalParameter[] value() default {};
 
 }

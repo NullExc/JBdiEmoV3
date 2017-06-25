@@ -35,16 +35,14 @@ import java.util.*;
 public class ContentPanelChart extends JPanel {
 
     private static final int COUNT = 60;
-    private Timer timer;
 
-    private Engine engine;
     private Element element;
     private DynamicTimeSeriesCollection dataSet;
     private JFreeChart chart;
 
 
-    public ContentPanelChart(Engine engine, Element element) {
-        this.engine = engine;
+    public ContentPanelChart(Element element) {
+
         this.element = element;
 
         // Borders and layout
@@ -164,7 +162,7 @@ public class ContentPanelChart extends JPanel {
     private void createTimer() {
 
         // Every second add emotion intensity values
-        timer = new Timer(1000, new ActionListener() {
+        Timer timer = new Timer(1000, new ActionListener() {
 
             @Override
             public void actionPerformed(ActionEvent e) {

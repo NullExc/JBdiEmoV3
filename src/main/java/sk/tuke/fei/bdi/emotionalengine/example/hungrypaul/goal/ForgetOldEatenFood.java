@@ -6,7 +6,6 @@ import jadex.bdiv3.annotation.GoalParameter;
 import jadex.bdiv3.annotation.RawEvent;
 import jadex.bdiv3.runtime.ChangeEvent;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.MyFoodEmotionalBelief;
 
 /**

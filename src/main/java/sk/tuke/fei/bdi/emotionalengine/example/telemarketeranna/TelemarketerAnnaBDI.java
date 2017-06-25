@@ -54,7 +54,7 @@ public class TelemarketerAnnaBDI {
     @AgentBody
     public void body() {
 
-        agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this, engine)).get();
+        agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this)).get();
 
         execFeature.repeatStep(0, 20000, iInternalAccess -> {
 

@@ -50,7 +50,7 @@ public class PanelElement extends JPanel {
         add(scrollableEventPanel, c);
 
         // Create event panel to display element emotional events
-        ContentPanelChart chartPanel = new ContentPanelChart(engine, element);
+        ContentPanelChart chartPanel = new ContentPanelChart(element);
         c.gridx = 0;
         c.gridy = 1;
         c.gridwidth = 2;
