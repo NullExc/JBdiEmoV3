@@ -55,4 +55,9 @@ public class CallAnnaOutPlan {
 
         }
     }
+
+
+    public void planPassed() {
+
+    }
 }

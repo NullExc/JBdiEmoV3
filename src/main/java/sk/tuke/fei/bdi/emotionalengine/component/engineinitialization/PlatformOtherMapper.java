@@ -1,7 +1,9 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
 import jadex.bdiv3.model.BDIModel;
+import jadex.bridge.IComponentStep;
 import jadex.bridge.IInternalAccess;
+import jadex.bridge.component.IExecutionFeature;
 import jadex.bridge.service.component.IRequiredServicesFeature;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 
@@ -28,66 +30,64 @@ import java.util.Set;
  * @author Peter Zemianek
  */
 
-public class PlatformOtherMapper implements Runnable {
+public class PlatformOtherMapper {
 
     private Set<String> emotionalOtherNames;
 
     private boolean isRunning = false;
     private final IInternalAccess access;
     private final Engine engine;
+    private final IExecutionFeature executionFeature;
 
     public PlatformOtherMapper(IInternalAccess access) {
         this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
         this.access = access;
+        this.executionFeature = access.getComponentFeature(IExecutionFeature.class);
 
-        new Thread(this).start();
+        map();
     }
 
-    public void run() {
+    public void map() {
 
-        while (true) {
+        executionFeature.repeatStep(0, 10000, new IComponentStep<Void>() {
+            @Override
+            public IFuture<Void> execute(IInternalAccess internalAccess) {
 
-            if (isRunning()) {
+                if (isRunning()) {
 
-                IComponentManagementService cms = (IComponentManagementService) access.getComponentFeature(IRequiredServicesFeature.class).getRequiredService(R.COMPONENT_SERVICE).get();
+                    IComponentManagementService cms = (IComponentManagementService)
+                            internalAccess.getComponentFeature(IRequiredServicesFeature.class).getRequiredService(R.COMPONENT_SERVICE).get();
 
-                IFuture<IComponentIdentifier[]> identifiersFuture = cms.getComponentIdentifiers();
+                    IFuture<IComponentIdentifier[]> identifiersFuture = cms.getComponentIdentifiers();
 
-                IComponentIdentifier[] identifiers = identifiersFuture.get();
+                    IComponentIdentifier[] identifiers = identifiersFuture.get();
 
-                engine.getEmotionalOtherIds().clear();
+                    engine.getEmotionalOtherIds().clear();
 
-                for (IComponentIdentifier cid : identifiers) {
+                    for (IComponentIdentifier cid : identifiers) {
 
-                    String componentName = cid.getLocalName();
+                        String componentName = cid.getLocalName();
 
-                    boolean isComponentEmotionalOther = false;
+                        boolean isComponentEmotionalOther = false;
 
-                    for (String emotionalOtherName : getEmotionalOtherNames()) {
+                        for (String emotionalOtherName : getEmotionalOtherNames()) {
 
-                        if (componentName.matches(emotionalOtherName + ".*")) {
-                          //  System.out.println(emotionalOtherName + componentName);
-                            isComponentEmotionalOther = true;
+                            if (componentName.matches(emotionalOtherName + ".*")) {
+                                isComponentEmotionalOther = true;
+                            }
                         }
-                    }
 
-                    if (isComponentEmotionalOther) {
+                        if (isComponentEmotionalOther) {
 
-                        if (!access.getComponentIdentifier().getName().equals(cid.getName()) ) {
-
-                            engine.getEmotionalOtherIds().add(cid);
-
+                            if (!internalAccess.getComponentIdentifier().getName().equals(cid.getName()) ) {
+                                engine.getEmotionalOtherIds().add(cid);
+                            }
                         }
                     }
                 }
+                return IFuture.DONE;
             }
-
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                System.out.println("sleep exception: " + e.getMessage());
-            }
-        }
+        });
     }
 
     public boolean isRunning() {

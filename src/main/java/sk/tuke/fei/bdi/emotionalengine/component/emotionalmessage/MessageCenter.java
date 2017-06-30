@@ -80,10 +80,7 @@ public class MessageCenter {
             messageResultType = R.MESSAGE_RESULT_FAILURE;
         }
 
-        // Get component identifiers of emotional others stored in engine
-        Set<IComponentIdentifier> componentIds = engine.getEmotionalOtherIds();
-
-        for (IComponentIdentifier serviceCid : JBDIEmo.MessageListeners) {
+        for (IComponentIdentifier serviceCid : engine.getEmotionalOtherIds()) {
 
             IFuture<ICommunicationService> service = SServiceProvider.getService(access.getExternalAccess(), serviceCid, ICommunicationService.class);
 
@@ -97,29 +94,27 @@ public class MessageCenter {
                 public void resultAvailable(ICommunicationService result) {
                     IComponentIdentifier cid = result.getComponentIdentifier().get();
 
-                    if (componentIds.contains(cid)) {
+                    Map<String, String> message = new HashMap<>();
 
-                        Map<String, String> message = new HashMap<>();
+                    message.put(R.KEY_MESSAGE_EMOTIONAL, R.MESSAGE_EMOTIONAL);
+                    message.put(R.KEY_MESSAGE_PLAN, messageEventType);
+                    message.put(R.KEY_MESSAGE_RESULT, messageResultType);
+                    message.put(R.KEY_SENDER_ID, access.getComponentIdentifier().getLocalName());
+                    message.put(R.KEY_PLAN_NAME, planName);
 
-                        message.put(R.KEY_MESSAGE_EMOTIONAL, R.MESSAGE_EMOTIONAL);
-                        message.put(R.KEY_MESSAGE_PLAN, messageEventType);
-                        message.put(R.KEY_MESSAGE_RESULT, messageResultType);
-                        message.put(R.KEY_SENDER_ID, access.getComponentIdentifier().getLocalName());
-                        message.put(R.KEY_PLAN_NAME, planName);
+                    IFuture<Void> recieve = result.messageReceived(message);
+                    recieve.addResultListener(new IResultListener<Void>() {
+                        @Override
+                        public void exceptionOccurred(Exception exception) {
+                            exception.printStackTrace();
+                        }
 
-                        IFuture<Void> recieve = result.messageReceived(message);
-                        recieve.addResultListener(new IResultListener<Void>() {
-                            @Override
-                            public void exceptionOccurred(Exception exception) {
-                                exception.printStackTrace();
-                            }
+                        @Override
+                        public void resultAvailable(Void result) {
 
-                            @Override
-                            public void resultAvailable(Void result) {
+                        }
+                    });
 
-                            }
-                        });
-                    }
                 }
             });
         }

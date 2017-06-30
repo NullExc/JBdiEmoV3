@@ -96,7 +96,7 @@ public class InitializeEmotionalEnginePlan {
 
                     @Override
                     public void resultAvailable(Void result) {
-                        JBDIEmo.MessageListeners.add(access.getComponentIdentifier());
+
                     }
                 });
     }

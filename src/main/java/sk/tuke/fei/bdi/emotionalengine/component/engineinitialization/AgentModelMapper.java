@@ -4,6 +4,7 @@ import jadex.bdiv3.model.*;
 import jadex.bridge.IInternalAccess;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.CampaignAgainstJunkFood;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;

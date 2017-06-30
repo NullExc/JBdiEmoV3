@@ -33,11 +33,6 @@ public class JBDIEmo {
      */
     public static  Map<String, Map<String, EmotionalGoal>> UserGoalParams = new LinkedHashMap<>();
 
-    /**
-     * Set of all Emotional Agents who are using ICommunicationService
-     */
-    public static Set<IComponentIdentifier> MessageListeners = new HashSet<>();
-
     public JBDIEmo() {
 
     }

@@ -54,7 +54,8 @@ public class ElementEventMonitor {
             e.printStackTrace();
         }
 
-        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
+        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel())
+                .getCapability().getBelief("engine").getValue(access);
 
         this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
 

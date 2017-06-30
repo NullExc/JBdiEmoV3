@@ -28,8 +28,6 @@ import java.util.List;
 /**
  * Created by PeterZemianek on 5/14/2017.
  */
-@Agent
-@JBDIEmoAgent(guiEnabled = true, others = "TelemarketerAnna")
 @Plans({@Plan(body = @Body(InitializeEmotionalEnginePlan.class)),
         @Plan(body = @Body(CallAnnaOutPlan.class)),
         @Plan(body = @Body(MetabolismServicePlan.class)),
@@ -52,6 +50,8 @@ import java.util.List;
 @ProvidedServices({
         @ProvidedService(name = R.MESSAGE_SERVICE, type = ICommunicationService.class, implementation = @Implementation(CommunicationService.class))
 })
+@Agent
+@JBDIEmoAgent(guiEnabled = true, others = "TelemarketerAnna")
 public class HungryPaulBDI {
 
     @AgentFeature

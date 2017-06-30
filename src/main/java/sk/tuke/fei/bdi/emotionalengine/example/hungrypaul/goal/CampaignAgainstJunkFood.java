@@ -5,6 +5,7 @@ import jadex.bdiv3.runtime.ChangeEvent;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 /**
