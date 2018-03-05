@@ -1,19 +1,28 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.features.IBDIAgentFeature;
+import jadex.bdiv3.features.impl.BDIMonitoringComponentFeature;
+import jadex.bdiv3.features.impl.BDIProvidedServicesComponentFeature;
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.model.*;
+import jadex.bdiv3.runtime.wrappers.SetWrapper;
 import jadex.bridge.IInternalAccess;
+import jadex.bridge.component.impl.IInternalMessageFeature;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.CampaignAgainstJunkFood;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
 /**
  * @author Tomáš Herich
@@ -30,11 +39,11 @@ public class AgentModelMapper {
     public AgentModelMapper(Object agent, IInternalAccess access) {
 
         this.agentClass = agent.getClass();
-        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
         this.access = access;
 
-        BDIModel model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
-        capability = model.getCapability();
+        this.capability = access.getComponentFeature(IInternalBDIAgentFeature.class).getBDIModel().getCapability();
+        this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class).getBDIModel().getCapability().getBelief("engine").getValue(access);
+
     }
 
     public void mapPlans() {
@@ -48,7 +57,7 @@ public class AgentModelMapper {
             try {
                 if (body.getMethod() != null) {
 
-                    for (Method method : agentClass.getDeclaredMethods()) {
+                    /*for (Method method : agentClass.getDeclaredMethods()) {
 
                         if (method.isAnnotationPresent(EmotionalPlan.class)
                                 && method.getName().equals(body.getMethod().getName())) {
@@ -61,7 +70,21 @@ public class AgentModelMapper {
 
                             planCount++;
                         }
+                    }*/
+
+                    boolean isEmotional;
+
+                    if (mPlan.getCapabilityName() == null) {
+                        isEmotional = parsePlanMethod(mPlan, agentClass);
+                    } else {
+
+                        Class capabilityClass = agentClass.getDeclaredField(mPlan.getCapabilityName()).getType();
+                        isEmotional = parsePlanMethod(mPlan, capabilityClass);
                     }
+
+                    if (isEmotional) planCount++;
+
+
                 } else if (body.getClazz() != null) {
                     Class planClass = Class.forName(body.getClazz().getTypeName());
 
@@ -79,6 +102,8 @@ public class AgentModelMapper {
                 }
             } catch (ClassNotFoundException ex) {
                 ex.printStackTrace();
+            } catch (NoSuchFieldException e) {
+                e.printStackTrace();
             }
         }
 
@@ -93,7 +118,10 @@ public class AgentModelMapper {
 
         for (MGoal mGoal : capability.getGoals()) {
             try {
-                Class goalClass = Class.forName(mGoal.getName());
+
+                //System.err.println(mGoal.getName());
+
+                Class goalClass = Class.forName(mGoal.getElementName());
 
                 for (Constructor constructor : goalClass.getConstructors()) {
 
@@ -103,9 +131,14 @@ public class AgentModelMapper {
 
                         String goalName = goalClass.getSimpleName();
 
+                        if (mGoal.getCapabilityName() != null) {
+                            goalName = mGoal.getCapabilityName() + "." + goalName;
+                        }
+
                         JBDIEmo.UserGoalParams.get(engine.getAgentName()).put(goalName, emotionalGoal);
 
                         engine.addElement(goalName, R.GOAL);
+
                         mGoal.setDescription(goalName);
 
                         goalCount++;
@@ -129,18 +162,29 @@ public class AgentModelMapper {
 
         for (MBelief belief : capability.getBeliefs()) {
 
+            String beliefName = belief.getName();
+
             if (belief.getValue(access) instanceof EmotionalBelief) {
 
                 EmotionalBelief emotionalBelief = (EmotionalBelief) belief.getValue(access);
 
-                if (emotionalBelief != null && emotionalBelief.getName() != null
-                        && !emotionalBelief.getName().equals("") && emotionalBelief.getName().equals(belief.getName())) {
+                String capaBeliefName = belief.getCapabilityName() + "/" + emotionalBelief.getName();
 
-                    engine.addElement(belief.getName(), R.BELIEF);
+                //System.err.println(beliefName + " " + emotionalBelief.getName() + " " + belief.getCapabilityName());
+
+                if (emotionalBelief != null && emotionalBelief.getName() != null
+                        && !emotionalBelief.getName().equals("") && ( emotionalBelief.getName().equals(beliefName)
+                        || capaBeliefName.equals(beliefName) ) ) {
+
+                    //if (belief.getCapabilityName() != null) engine.addElement(capaBeliefName, R.BELIEF);
+                    //else engine.addElement(beliefName, R.BELIEF);
+                    engine.addElement(beliefName, R.BELIEF);
+
+                    if (belief.getCapabilityName() != null) emotionalBelief.setName(capaBeliefName);
 
                     beliefCount++;
                 } else {
-                    if (!emotionalBelief.getName().equals(belief.getName())) {
+                    if (!emotionalBelief.getName().equals(beliefName)) {
                         System.out.println("Belief name doesn't match EmotionalBelief name: " + belief.getName() + ", " + emotionalBelief.getName());
                     }
                 }
@@ -150,10 +194,9 @@ public class AgentModelMapper {
 
                 Collection<EmotionalBelief> collection = (Collection<EmotionalBelief>) belief.getValue(access);
 
-                if (collection.getClass().getComponentType() != null) {
-                    System.err.println(collection.getClass().getComponentType().isAssignableFrom(EmotionalBelief.class));
-                }
-                engine.addElement(belief.getName(), R.BELIEF_SET);
+                System.out.println("wrapper " + belief.isFieldBelief() + " " + belief.getField());
+
+                engine.addElement(beliefName, R.BELIEF_SET);
 
                 Iterator iterator = collection.iterator();
 
@@ -165,13 +208,39 @@ public class AgentModelMapper {
 
                         EmotionalBelief elementBelief = (EmotionalBelief) object;
 
-                        if (belief.getName() != null && !belief.getName().equals("")) {
+                        if (beliefName != null && !beliefName.equals("")) {
 
                             // Add element corresponding to particular belief into emotional engine
-                            engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, belief.getName());
+                            engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, beliefName);
 
                             // Increment belief count
                             beliefCount++;
+                        }
+                    }
+                }
+            } else if (belief.getValue(access) instanceof Map) {
+                Map map = (Map) belief.getValue(access);
+
+                if (map != null) {
+                    Iterator iterator = map.keySet().iterator();
+
+                    engine.addElement(beliefName, R.BELIEF_SET);
+
+                    while (iterator.hasNext()) {
+                        Map.Entry pair = (Map.Entry) iterator.next();
+
+                        if (pair.getValue() instanceof EmotionalBelief) {
+
+                            EmotionalBelief elementBelief = (EmotionalBelief) pair.getValue();
+
+                            if (beliefName != null && !beliefName.equals("")) {
+
+                                // Add element corresponding to particular belief into emotional engine
+                                engine.addElement(elementBelief.getName(), R.BELIEF_SET_BELIEF, beliefName);
+
+                                // Increment belief count
+                                beliefCount++;
+                            }
                         }
                     }
                 }
@@ -182,6 +251,33 @@ public class AgentModelMapper {
 
         System.out.println("Beliefs created : " + beliefCount + ", total count of beliefs : " + totalCount);
 
+    }
+
+    private boolean parsePlanMethod(MPlan mPlan, Class clazz) {
+
+        for (Method method : clazz.getDeclaredMethods()) {
+
+            if (method.isAnnotationPresent(EmotionalPlan.class)
+                    && method.getName().equals(mPlan.getBody().getMethod().getName())) {
+
+                EmotionalPlan emoPlan = method.getAnnotation(EmotionalPlan.class);
+
+                String planName = method.getName();
+
+                if (mPlan.getCapabilityName() != null) {
+                    planName = mPlan.getCapabilityName() + "." + planName;
+                }
+
+                JBDIEmo.UserPlanParams.get(engine.getAgentName()).put(planName, emoPlan);
+
+                engine.addElement(planName, R.PLAN);
+                mPlan.setDescription(planName);
+
+                return true;
+
+            }
+        }
+        return false;
     }
 
 }

@@ -1,5 +1,6 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage;
 
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.model.BDIModel;
 import jadex.bdiv3.model.MCapability;
 import jadex.bdiv3.model.MPlan;
@@ -52,11 +53,9 @@ public class MessageCenter {
 
         }
 
-        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel())
-                .getCapability().getBelief("engine").getValue(access);
+        this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class).getBDIModel().getCapability().getBelief("engine").getValue(access);
 
-        BDIModel model = (BDIModel) access.getExternalAccess().getModel().getRawModel();
-        capability = model.getCapability();
+        capability = access.getComponentFeature(IInternalBDIAgentFeature.class).getBDIModel().getCapability();
 
         params = new ParameterValueMapper(engine.getAgentObject());
     }
@@ -92,7 +91,6 @@ public class MessageCenter {
 
                 @Override
                 public void resultAvailable(ICommunicationService result) {
-                    IComponentIdentifier cid = result.getComponentIdentifier().get();
 
                     Map<String, String> message = new HashMap<>();
 

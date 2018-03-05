@@ -3,7 +3,9 @@ package sk.tuke.fei.bdi.emotionalengine.plan;
 
 import jadex.bdiv3.annotation.Plan;
 import jadex.bdiv3.annotation.PlanBody;
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.model.BDIModel;
+import jadex.bdiv3.model.MBelief;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.service.component.IProvidedServicesFeature;
 import jadex.commons.future.Future;
@@ -31,9 +33,6 @@ import java.util.LinkedHashMap;
 @Plan
 public class InitializeEmotionalEnginePlan {
 
-
-    private IInternalAccess access;
-
     private AgentModelMapper agentModelMapper;
     private PlatformOtherMapper platformOtherMapper;
     private Object agentObject;
@@ -41,30 +40,28 @@ public class InitializeEmotionalEnginePlan {
     private JBDIEmoAgent emotionalAgent;
     private String[] emotionalOthers;
 
+
     public InitializeEmotionalEnginePlan(Object agent) {
+
         this.agentObject = agent;
         this.emotionalAgent = agent.getClass().getAnnotation(JBDIEmoAgent.class);
 
         this.emotionalOthers = emotionalAgent.others().split(",");
-
-        try {
-            this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
-        } catch (JBDIEmoException e) {
-            e.printStackTrace();
-        }
-
-        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel())
-                .getCapability().getBelief("engine").getValue(access);
-
-        engine.setAgentName(access.getComponentIdentifier().getName());
-        engine.setAgentObject(agent);
-
-        JBDIEmo.UserPlanParams.put(engine.getAgentName(), new LinkedHashMap<>());
-        JBDIEmo.UserGoalParams.put(engine.getAgentName(), new LinkedHashMap<>());
     }
 
     @PlanBody
-    public void body() {
+    public void body(IInternalAccess access) {
+
+        this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class)
+                .getBDIModel().getCapability().getBelief("engine").getValue(access);
+
+        //System.out.println("| access | " + engine);
+
+        engine.setAgentName(access.getComponentIdentifier().getName());
+        engine.setAgentObject(agentObject);
+
+        JBDIEmo.UserPlanParams.put(engine.getAgentName(), new LinkedHashMap<>());
+        JBDIEmo.UserGoalParams.put(engine.getAgentName(), new LinkedHashMap<>());
 
         agentModelMapper = new AgentModelMapper(agentObject, access);
         platformOtherMapper = new PlatformOtherMapper(access);
@@ -83,22 +80,6 @@ public class InitializeEmotionalEnginePlan {
         elementEventMonitor.goalsAndPlansMonitoring();
         elementEventMonitor.beliefMonitoring();
         elementEventMonitor.beliefSetMonitoring();
-
-        ICommunicationService service = (ICommunicationService) access.getComponentFeature(IProvidedServicesFeature.class)
-                .getProvidedService(R.MESSAGE_SERVICE);
-
-        service.initialize(new Future<>(access), access.getComponentIdentifier()).
-                addResultListener(new IResultListener<Void>() {
-                    @Override
-                    public void exceptionOccurred(Exception exception) {
-                        exception.printStackTrace();
-                    }
-
-                    @Override
-                    public void resultAvailable(Void result) {
-
-                    }
-                });
     }
 
     private void mapAgentModel() {

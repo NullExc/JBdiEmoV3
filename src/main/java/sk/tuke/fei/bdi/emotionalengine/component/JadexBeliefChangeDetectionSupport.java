@@ -5,6 +5,7 @@ import jadex.commons.beans.PropertyChangeSupport;
 
 /**
  * @author Tomáš Herich
+ * @author Peter Zemianek
  */
 
 public class JadexBeliefChangeDetectionSupport {
@@ -34,6 +35,10 @@ public class JadexBeliefChangeDetectionSupport {
 
     public synchronized void fireBeliefChange() {
         pcs.firePropertyChange("propertyChangeHelper", false, true);
+    }
+
+    public synchronized void fireEmotionalBeliefChange(Object oldValue, Object newValue) {
+        pcs.firePropertyChange("propertyChangeHelper", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

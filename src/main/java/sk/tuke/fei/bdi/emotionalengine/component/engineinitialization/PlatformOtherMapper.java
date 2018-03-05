@@ -1,10 +1,12 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.model.BDIModel;
 import jadex.bridge.IComponentStep;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
 import jadex.bridge.service.component.IRequiredServicesFeature;
+import jadex.bridge.service.search.SServiceProvider;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 
 /*
@@ -22,6 +24,7 @@ import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.service.types.cms.IComponentManagementService;
 import jadex.commons.future.IFuture;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
+import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.util.Set;
 
@@ -40,7 +43,8 @@ public class PlatformOtherMapper {
     private final IExecutionFeature executionFeature;
 
     public PlatformOtherMapper(IInternalAccess access) {
-        this.engine = (Engine) ((BDIModel) access.getExternalAccess().getModel().getRawModel()).getCapability().getBelief("engine").getValue(access);
+        this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class)
+                .getBDIModel().getCapability().getBelief("engine").getValue(access);
         this.access = access;
         this.executionFeature = access.getComponentFeature(IExecutionFeature.class);
 
@@ -55,10 +59,9 @@ public class PlatformOtherMapper {
 
                 if (isRunning()) {
 
-                    IComponentManagementService cms = (IComponentManagementService)
-                            internalAccess.getComponentFeature(IRequiredServicesFeature.class).getRequiredService(R.COMPONENT_SERVICE).get();
+                    IFuture<IComponentManagementService> cms = SServiceProvider.getService(JBDIEmo.PLATFORM, IComponentManagementService.class); // (IComponentManagementService) internalAccess.getComponentFeature(IRequiredServicesFeature.class).getRequiredService(R.COMPONENT_SERVICE).get();
 
-                    IFuture<IComponentIdentifier[]> identifiersFuture = cms.getComponentIdentifiers();
+                    IFuture<IComponentIdentifier[]> identifiersFuture = cms.get().getComponentIdentifiers();
 
                     IComponentIdentifier[] identifiers = identifiersFuture.get();
 
@@ -78,7 +81,6 @@ public class PlatformOtherMapper {
                         }
 
                         if (isComponentEmotionalOther) {
-
                             if (!internalAccess.getComponentIdentifier().getName().equals(cid.getName()) ) {
                                 engine.getEmotionalOtherIds().add(cid);
                             }

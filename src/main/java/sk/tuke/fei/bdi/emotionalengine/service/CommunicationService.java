@@ -3,6 +3,7 @@ package sk.tuke.fei.bdi.emotionalengine.service;
 import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.service.annotation.Service;
+import jadex.bridge.service.annotation.ServiceComponent;
 import jadex.commons.future.Future;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.IResultListener;
@@ -18,39 +19,16 @@ public class CommunicationService implements ICommunicationService {
 
     private MessageCenter messageCenter;
 
-    private IComponentIdentifier cid;
-
-    @Override
-    public IFuture<Void> initialize(IFuture<IInternalAccess> access, IComponentIdentifier cid) {
-
-        this.cid = cid;
-
-        access.addResultListener(new IResultListener<IInternalAccess>() {
-            @Override
-            public void exceptionOccurred(Exception exception) {
-
-            }
-
-            @Override
-            public void resultAvailable(IInternalAccess result) {
-
-                messageCenter = new MessageCenter(result);
-            }
-        });
-
-        return IFuture.DONE;
-    }
+    @ServiceComponent
+    protected IInternalAccess access;
 
     @Override
     public IFuture<Void> messageReceived(Map<String, String> message) {
+
+        if (messageCenter == null) messageCenter = new MessageCenter(access);
+
         messageCenter.recieveMessages(message);
+
         return IFuture.DONE;
     }
-
-    @Override
-    public IFuture<IComponentIdentifier> getComponentIdentifier() {
-        return new Future<>(cid);
-    }
-
-
 }

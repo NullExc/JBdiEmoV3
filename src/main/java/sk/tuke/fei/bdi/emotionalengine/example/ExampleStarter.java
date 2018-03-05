@@ -15,6 +15,7 @@ public class ExampleStarter {
         Map<String, String> agents = new HashMap<>();
 
         agents.put("TelemarketerAnna", "sk.tuke.fei.bdi.emotionalengine.example.telemarketeranna.TelemarketerAnnaBDI.class");
+
         agents.put("HungryPaul", "sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI.class");
 
         JBDIEmo.start(agents);

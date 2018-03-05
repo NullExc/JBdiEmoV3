@@ -95,7 +95,7 @@ public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
             setAttractionIntensity(attractionIntensity);
         }
 
-        fireBeliefChange();
+        fireEmotionalBeliefChange(null, this);
     }
 
     private void setAttractionIntensity(double attractionIntensity) {
@@ -118,6 +118,10 @@ public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
 
     private void setFamiliar(boolean familiar) {
         isFamiliar = familiar;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
 }

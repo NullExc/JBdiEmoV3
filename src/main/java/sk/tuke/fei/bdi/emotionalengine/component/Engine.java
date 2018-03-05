@@ -16,7 +16,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * @author Tomáš Herich
  */
 
-public class Engine extends JadexBeliefChangeDetectionSupport implements Runnable{
+public class Engine extends JadexBeliefChangeDetectionSupport implements Runnable {
 
     private String agentName;
     private Object agentObject;
@@ -68,7 +68,7 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
             // Check if engine was initialized
             if (isInitialized) {
 
-               // System.out.println("Fire belief change " + agentName);
+                // System.out.println("Fire belief change " + agentName);
 
                 // Calculate mood intensity
                 positiveMood.calculateIntensity(this);
@@ -151,9 +151,9 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
      * Add belief set belief objectValue to engine
      * (overloaded method with additional parameter)
      *
-     * @param name objectValue name (e.g. test_goal) as specified in ADF
-     *             for every emotional goal, plan or belief
-     * @param type objectValue type specified in R (e.g. R.GOAL)
+     * @param name                objectValue name (e.g. test_goal) as specified in ADF
+     *                            for every emotional goal, plan or belief
+     * @param type                objectValue type specified in R (e.g. R.GOAL)
      * @param parentBeliefSetName name of belief set to which belief belongs
      */
     public void addElement(String name, int type, String parentBeliefSetName) {
@@ -176,7 +176,6 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
      * Get objectValue specified by its name and type.
      * Element can be goal, plan or belief mapped from
      * agent ADF.
-     *
      *
      * @param name objectValue name (e.g. test_goal) as specified in ADF
      *             for every emotional goal, plan or belief
@@ -203,9 +202,9 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
     /**
      * Remove objectValue from engine
      *
-     * @param name  objectValue name (e.g. test_goal) as specified in ADF
-     *              for every emotional goal, plan or belief
-     * @param type  objectValue type specified in R (e.g. R.GOAL)
+     * @param name objectValue name (e.g. test_goal) as specified in ADF
+     *             for every emotional goal, plan or belief
+     * @param type objectValue type specified in R (e.g. R.GOAL)
      * @return true if objectValue was removed
      */
     public boolean removeElement(String name, int type) {
@@ -396,7 +395,11 @@ public class Engine extends JadexBeliefChangeDetectionSupport implements Runnabl
      * @param receivedMessage content string of received message
      */
     public synchronized void addReceivedMessage(String receivedMessage) {
-        receivedMessages.add(receivedMessage);
+        try {
+            receivedMessages.add(receivedMessage);
+        } catch (IllegalStateException e) {
+
+        }
     }
 
     /**

@@ -2,53 +2,41 @@ package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul;
 
 import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.features.IBDIAgentFeature;
-import jadex.bdiv3.runtime.IPlan;
+import jadex.bdiv3.runtime.ChangeEvent;
+import jadex.bdiv3.runtime.IGoal;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
-import jadex.bridge.service.RequiredServiceInfo;
-import jadex.bridge.service.types.cms.IComponentManagementService;
+import jadex.bridge.nonfunctional.annotation.NameValue;
 import jadex.micro.annotation.*;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Fridge;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Hunger;
-import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.goal.*;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.plan.*;
+import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.JBDIEmoAgent;
 import sk.tuke.fei.bdi.emotionalengine.plan.InitializeEmotionalEnginePlan;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 import sk.tuke.fei.bdi.emotionalengine.service.CommunicationService;
 import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by PeterZemianek on 5/14/2017.
  */
 @Plans({@Plan(body = @Body(InitializeEmotionalEnginePlan.class)),
-        @Plan(body = @Body(CallAnnaOutPlan.class)),
         @Plan(body = @Body(MetabolismServicePlan.class)),
-        @Plan(body = @Body(EatHealthyPlan.class), priority = 1),
-        @Plan(body = @Body(EatUnhealthyPlan.class), priority = 2),
-        @Plan(body = @Body(DonateOldClothesPlan.class)),
-        @Plan(body = @Body(SprayPaintBillboardPlan.class)),
-        @Plan(body = @Body(ForgetOldEatenFoodPlan.class))
+        @Plan(body = @Body(EatHealthyPlan.class))
 })
 @Goals({
-        @Goal(clazz = CampaignAgainstJunkFood.class),
-        @Goal(clazz = CommunityVolunteering.class),
-        @Goal(clazz = EatHealthyFood.class),
-        @Goal(clazz = FindDate.class),
-        @Goal(clazz = ForgetOldEatenFood.class)
-})
-@RequiredServices({
-        @RequiredService(name = R.COMPONENT_SERVICE, type = IComponentManagementService.class, binding = @Binding(scope = RequiredServiceInfo.SCOPE_GLOBAL))
+        @Goal(clazz = EmotionalCapability.Translate.class)
 })
 @ProvidedServices({
         @ProvidedService(name = R.MESSAGE_SERVICE, type = ICommunicationService.class, implementation = @Implementation(CommunicationService.class))
+})
+@BDIConfigurations({
+        @BDIConfiguration(name = "initial", initialplans = {@NameValue(name = "initial",clazz = InitializeEmotionalEnginePlan.class)})
 })
 @Agent
 @JBDIEmoAgent(guiEnabled = true, others = "TelemarketerAnna")
@@ -64,34 +52,22 @@ public class HungryPaulBDI {
 
     @Belief
     public Engine engine = new Engine();
-    @Belief
-    public Fridge fridge = new Fridge();
 
     @Belief
-    public List<EmotionalBelief> food = new ArrayList<>();
+    public Set<EmotionalBelief> food = new HashSet<>();
 
-    @Belief
-    public List<String> test = new ArrayList<>();
+    @Capability
+    protected EmotionalCapability capability = new EmotionalCapability();
 
-    private Hunger hunger = new Hunger(0.5);
+    private Hunger hunger = new Hunger(0.55);
 
-    public double probability = Math.random();
+    public double approval = 0.4;
 
-    public double desirability = (Math.random() * 0.3) + 0.7;
+    public double disapproval = 0.4;
 
-    public double approval = (Math.random() * 0.5) + 0.5;
-
-    public double eatHealthyFoodDesirability = getHunger().getHungerValue();
-
-    public double disapproval = (Math.random() * 0.5) + 0.5;
-
-    public double otherDesireSuccess = (Math.random() * 0.3) + 0.7;
-
-    public double otherDesireFailure = (Math.random() * 0.3) + 0.7;
-
-    public double disapprovalApprovalFood = (Math.random() * 0.2) + 0.8;
-
-    public double desirabilityFood = Math.min(getHunger().getHungerValue() + Math.random() + 0.3, 1);
+    public double eatHealthyFoodDesirability() {
+        return getHunger().getHungerValue();
+    }
 
     @AgentCreated
     public void init() {
@@ -101,33 +77,52 @@ public class HungryPaulBDI {
     @AgentBody
     public void body() {
 
-        agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this)).get();
+
+      //  agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this)).get();
+
+       // agentFeature.dispatchTopLevelGoal(capability.new Translate("")).get();
+
+//        System.err.println(agentAccess.getComponentFeature(BDIMonitoringComponentFeature.class).getCurrentStateEvents().size());
+
+
+        execFeature.waitForDelay(5000).get();
+
+        capability.setBelief(true);
+
+        capability.updateBelief();
 
         agentFeature.adoptPlan(new MetabolismServicePlan()).get();
+
+        //capability.capaBelief = true;
     }
 
-    @EmotionalPlan({
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER, target = R.SIMPLE_STRING, stringValue = "TelemarketerAnna"),
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER_GROUP, target = R.SIMPLE_BOOLEAN, booleanValue = false),
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER_PLAN, target = R.SIMPLE_STRING, stringValue = "advertiseBioFoodStore"),
-            @EmotionalParameter(parameter = R.PARAM_APPROVAL, target = R.FIELD, fieldValue = "disapprovalApprovalFood"),
-            @EmotionalParameter(parameter = R.PARAM_DESIRABILITY, target = R.FIELD, fieldValue = "desirabilityFood")
-    })
-    @Plan
-    public void advertiseBioFoodStore(IPlan plan) {
+    @Goal(deliberation = @Deliberation(cardinalityone = true))
+    public static class EatHealthyFood {
 
-    }
+        @GoalAPI
+        IGoal goal;
 
-    @EmotionalPlan({
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER, target = R.SIMPLE_STRING, stringValue = "TelemarketerAnna"),
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER_GROUP, target = R.SIMPLE_BOOLEAN, booleanValue = false),
-            @EmotionalParameter(parameter = R.PARAM_EMOTIONAL_OTHER_PLAN, target = R.SIMPLE_STRING, stringValue = "advertiseLocalFastFood"),
-            @EmotionalParameter(parameter = R.PARAM_DISAPPROVAL, target = R.FIELD, fieldValue = "disapprovalApprovalFood"),
-            @EmotionalParameter(parameter = R.PARAM_DESIRABILITY, target = R.FIELD, fieldValue = "desirabilityFood")
-    })
-    @Plan
-    public void advertiseLocalFastFood(IPlan plan) {
+        @GoalParameter
+        protected Hunger hunger;
 
+        public double getHungerValue() {
+            return hunger.getHungerValue();
+        }
+
+        @EmotionalGoal({
+                @EmotionalParameter(parameter = R.PARAM_DESIRABILITY, target = R.METHOD, methodName = "getHungerValue", agentClass = false)
+        })
+        public EatHealthyFood(Hunger hunger) {
+            this.hunger = hunger;
+        }
+
+        @GoalCreationCondition(rawevents = {@RawEvent(value = ChangeEvent.BELIEFCHANGED, second = "hunger")})
+        public static EatHealthyFood creationCondition(Hunger hunger) {
+            if (hunger.getHungerValue() > 0.7) {
+                return new EatHealthyFood(hunger);
+            }
+            return null;
+        }
     }
 
     @Belief

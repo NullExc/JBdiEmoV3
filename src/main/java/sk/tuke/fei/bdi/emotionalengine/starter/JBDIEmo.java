@@ -2,16 +2,20 @@ package sk.tuke.fei.bdi.emotionalengine.starter;
 
 import jadex.base.PlatformConfiguration;
 import jadex.base.Starter;
+import jadex.bdiv3.features.IBDIAgentFeature;
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.IExternalAccess;
 import jadex.bridge.service.search.SServiceProvider;
 import jadex.bridge.service.types.cms.IComponentManagementService;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.ITuple2Future;
+import jadex.micro.annotation.Configuration;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
+import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -33,6 +37,8 @@ public class JBDIEmo {
      */
     public static  Map<String, Map<String, EmotionalGoal>> UserGoalParams = new LinkedHashMap<>();
 
+    public static IExternalAccess PLATFORM = null;
+
     public JBDIEmo() {
 
     }
@@ -50,6 +56,8 @@ public class JBDIEmo {
 
         IFuture<IExternalAccess> fut = Starter.createPlatform(configuration);
         IExternalAccess platform = fut.get();
+
+        PLATFORM = platform;
 
         IFuture<IComponentManagementService> future = SServiceProvider.getService(platform, IComponentManagementService.class);
 
@@ -69,7 +77,15 @@ public class JBDIEmo {
             IComponentIdentifier cid =  fut_cid.getFirstResult();
 
             System.out.println("Started component: " + cid);
+
+            //Object feature = SServiceProvider.getService(cms.getExternalAccess(cid).get(), Configuration.class).get();
+
+          //  System.err.println("feature " + feature);
         }
+
+       // IComponentIdentifier[] childrens = platform.getChildren()
+
+
     }
 
     /**

@@ -33,9 +33,9 @@ public class R {
     // BDIV2 emotional parameter attribute keys
     public final static String FIELD = "v2_field_target";
     public final static String METHOD = "v2_method_target";
-    public final static String SIMPLE_BOOLEAN = "v2_simple_boolean";
-    public final static String SIMPLE_STRING = "v2_simple_string";
-    public final static String SIMPLE_DOUBLE = "v2_simple_double";
+    public final static String BOOLEAN = "v2_simple_boolean";
+    public final static String STRING = "v2_simple_string";
+    public final static String DOUBLE = "v2_simple_double";
 
     //BDIV2
 

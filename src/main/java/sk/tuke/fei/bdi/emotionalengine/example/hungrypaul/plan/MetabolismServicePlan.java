@@ -39,45 +39,48 @@ public class MetabolismServicePlan {
     @PlanBody
     public void body() {
 
-        try {
+        System.err.println("Metabolism plan starts");
 
-            while (true) {
+        while (true) {
 
-                plan.waitFor(1500).get();
+            plan.waitFor(1500).get();
 
-                double hunger = paulBDI.getHunger().getHungerValue();
+            double hunger = paulBDI.getHunger().getHungerValue();
 
-                if (hunger + 0.02 <= 1) {
-                    hunger = hunger + 0.02;
-                    paulBDI.setHunger(new Hunger(hunger));
-                    //hungerBelief = new Hunger(hunger);
-                    //model.getCapability().getBelief("hunger").setValue(agentAccess, new Hunger(hunger));
-                }
+            if (hunger + 0.02 <= 1) {
+                hunger = hunger + 0.02;
+
+             //   System.out.println("MetabolismServicePlan : " + hunger);
+
+                paulBDI.setHunger(new Hunger(hunger));
+                //hungerBelief = new Hunger(hunger);
+                //model.getCapability().getBelief("hunger").setValue(agentAccess, new Hunger(hunger));
+            }
 
 
-                String selectedHungerLevel;
+            String selectedHungerLevel;
 
-                if (hunger < 0.2) {
+            if (hunger < 0.2) {
 
-                    selectedHungerLevel = hungerLevel[0];
+                selectedHungerLevel = hungerLevel[0];
 
-                } else if (hunger >= 0.2 && hunger < 0.4) {
+            } else if (hunger >= 0.2 && hunger < 0.4) {
 
-                    selectedHungerLevel = hungerLevel[1];
+                selectedHungerLevel = hungerLevel[1];
 
-                } else if (hunger >= 0.4 && hunger < 0.6) {
+            } else if (hunger >= 0.4 && hunger < 0.6) {
 
-                    selectedHungerLevel = hungerLevel[2];
+                selectedHungerLevel = hungerLevel[2];
 
-                } else if (hunger >= 0.6 && hunger < 0.8) {
+            } else if (hunger >= 0.6 && hunger < 0.8) {
 
-                    selectedHungerLevel = hungerLevel[3];
+                selectedHungerLevel = hungerLevel[3];
 
-                } else {
+            } else {
 
-                    selectedHungerLevel = hungerLevel[4];
+                selectedHungerLevel = hungerLevel[4];
 
-                }
+            }
 
 //                EmotionalBelief hungerEmotions = (EmotionalBelief) getBeliefbase().getBelief("hunger_emotions").getFact();
 //                if (hunger < 0.4) {
@@ -86,21 +89,15 @@ public class MetabolismServicePlan {
 //                    hungerEmotions.updateBelief(true, false, hunger * 0.1);
 //                }
 
-                if (!selectedHungerLevel.equals(lastHungerLevel)) {
+            if (!selectedHungerLevel.equals(lastHungerLevel)) {
 
-                    System.out.println("John is " + selectedHungerLevel + " (" + MyMath.roundDouble(hunger, 2) + ")");
+                System.out.println("John is " + selectedHungerLevel + " (" + MyMath.roundDouble(hunger, 2) + ")");
 
-                    lastHungerLevel = selectedHungerLevel;
+                lastHungerLevel = selectedHungerLevel;
 
-                }
             }
-
-        } catch (Exception e) {
-            System.out.println("Metabolism service plan exception: " + e.getMessage());
-        } finally {
-            //endAtomic();
-            body();
         }
+
 
     }
 }

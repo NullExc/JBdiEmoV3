@@ -1,6 +1,7 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotionalevent;
 
 
+import jadex.bdiv3.runtime.impl.RGoal;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
@@ -37,7 +38,7 @@ public class ParameterValueMapper {
 
             try {
 
-                if (parameter.target().equals(R.SIMPLE_DOUBLE)) {
+                if (parameter.target().equals(R.DOUBLE)) {
 
                     if (parameter.doubleValue() > 0) {
                         userParameters.put(parameter.parameter(), parameter.doubleValue());
@@ -45,14 +46,14 @@ public class ParameterValueMapper {
 
                 } else if (parameter.target().equals(R.FIELD)) {
 
-                    Field field = agentClass.getDeclaredField(parameter.fieldValue());
+                    Field field = agentClass.getDeclaredField(parameter.fieldName());
                     field.setAccessible(true);
                     Double result = (Double) field.get(agentObject);
                     userParameters.put(parameter.parameter(), result);
 
                 } else if (parameter.target().equals(R.METHOD)) {
 
-                    Method method = agentClass.getDeclaredMethod(parameter.methodValue());
+                    Method method = agentClass.getDeclaredMethod(parameter.methodName());
                     method.setAccessible(true);
                     Double result = (Double) method.invoke(agentObject);
                     userParameters.put(parameter.parameter(), result);
@@ -71,6 +72,64 @@ public class ParameterValueMapper {
         }
 
      //   System.err.println("User parameters : " + userParameters);
+
+        return userParameters;
+    }
+
+    public Map<String, Double> getGoalUserParameterValues(RGoal goal, EmotionalParameter[] parameters) {
+
+        Map<String, Double> userParameters = new HashMap<String, Double>();
+
+        Object object = null;
+
+        Class clazz = null;
+
+        for (EmotionalParameter parameter : parameters) {
+
+            if (!parameter.agentClass()) {
+                object = goal.getPojoElement();
+                clazz = object.getClass();
+            } else {
+                object = agentObject;
+                clazz = agentClass;
+            }
+
+            try {
+
+                if (parameter.target().equals(R.DOUBLE)) {
+
+                    if (parameter.doubleValue() > 0) {
+                        userParameters.put(parameter.parameter(), parameter.doubleValue());
+                    }
+
+                } else if (parameter.target().equals(R.FIELD)) {
+
+                    Field field = clazz.getDeclaredField(parameter.fieldName());
+                    field.setAccessible(true);
+                    Double result = (Double) field.get(object);
+                    userParameters.put(parameter.parameter(), result);
+
+                } else if (parameter.target().equals(R.METHOD)) {
+
+                    Method method = clazz.getDeclaredMethod(parameter.methodName());
+                    method.setAccessible(true);
+                    Double result = (Double) method.invoke(object);
+                    userParameters.put(parameter.parameter(), result);
+                }
+
+            } catch (NoSuchFieldException ex) {
+                ex.printStackTrace();
+            } catch (NoSuchMethodException ex) {
+                ex.printStackTrace();
+            } catch (IllegalAccessException ex) {
+                ex.printStackTrace();
+            } catch (InvocationTargetException ex) {
+                ex.printStackTrace();
+            }
+
+        }
+
+        //   System.err.println("User parameters : " + userParameters);
 
         return userParameters;
     }

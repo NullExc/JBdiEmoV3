@@ -41,11 +41,11 @@ public @interface JBDIEmoAgent {
     /**
      * @return specifies interval for decaying Emotion values
      */
-    int decayTimeMillis() default 750;
+    int decayTimeMillis() default 500;
 
     /**
      * @return specifies parameter of inverse sigmoid function
      */
-    int decayStepsToMin() default 20;
+    int decayStepsToMin() default 30;
 
 }
