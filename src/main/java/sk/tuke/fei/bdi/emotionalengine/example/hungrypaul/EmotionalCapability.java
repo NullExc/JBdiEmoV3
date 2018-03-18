@@ -43,6 +43,19 @@ public class EmotionalCapability {
         }
     }
 
+    @EmotionalPlan({
+            @EmotionalParameter(parameter = R.PARAM_DISAPPROVAL, target = R.DOUBLE, doubleValue = 0.7)
+    })
+    @Plan(trigger = @Trigger(factremoveds = "capaBelief"))
+    public static class CapaClassPlan {
+
+        @PlanBody
+        public void body() {
+            System.err.println(" **************** capaclassplan");
+        }
+
+    }
+
     public void setBelief(boolean value) {
         this.capaBelief = value;
     }
@@ -51,7 +64,7 @@ public class EmotionalCapability {
 
         System.err.println("Updating beliefs");
 
-        emotionalBelief.updateBelief(true, true, 0.9);
+        emotionalBelief.updateBelief(true, true, 0.77777);
 
         //emotionalBelief = new EmotionalBelief("emotionalBelief", null, false, false, 0.4);
     }

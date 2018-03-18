@@ -2,6 +2,7 @@ package sk.tuke.fei.bdi.emotionalengine.component;
 
 import jadex.commons.beans.PropertyChangeListener;
 import jadex.commons.beans.PropertyChangeSupport;
+import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 
 /**
  * @author Tomáš Herich
@@ -12,6 +13,7 @@ public class JadexBeliefChangeDetectionSupport {
 
     protected PropertyChangeSupport pcs;
     protected boolean propertyChangeHelper;
+    protected EmotionalBelief emotionalBeliefChangeHelper;
 
     /*  Used to notify Jadex of belief changes
         e.g.:
@@ -38,7 +40,7 @@ public class JadexBeliefChangeDetectionSupport {
     }
 
     public synchronized void fireEmotionalBeliefChange(Object oldValue, Object newValue) {
-        pcs.firePropertyChange("propertyChangeHelper", oldValue, newValue);
+        pcs.firePropertyChange("emotionalBeliefChangeHelper", oldValue, newValue);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {

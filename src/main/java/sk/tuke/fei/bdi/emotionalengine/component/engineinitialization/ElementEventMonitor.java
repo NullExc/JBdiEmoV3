@@ -115,6 +115,8 @@ public class ElementEventMonitor {
 
     public void handlePlanEvent(PlanInfo planInfo) {
 
+       // System.err.println(planInfo);
+
         String[] planNames = engine.getElementsNames(R.PLAN);
 
         if (planNames == null) return;

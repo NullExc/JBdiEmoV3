@@ -1,10 +1,12 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
+import jadex.bdiv3.annotation.Plan;
 import jadex.bdiv3.features.IBDIAgentFeature;
 import jadex.bdiv3.features.impl.BDIMonitoringComponentFeature;
 import jadex.bdiv3.features.impl.BDIProvidedServicesComponentFeature;
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.model.*;
+import jadex.bdiv3.runtime.impl.RGoal;
 import jadex.bdiv3.runtime.wrappers.SetWrapper;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.impl.IInternalMessageFeature;
@@ -19,10 +21,7 @@ import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Tomáš Herich
@@ -86,13 +85,18 @@ public class AgentModelMapper {
 
 
                 } else if (body.getClazz() != null) {
+
                     Class planClass = Class.forName(body.getClazz().getTypeName());
 
                     if (planClass.isAnnotationPresent(EmotionalPlan.class)) {
-                        String simpleName = body.getClazz().getType0().getSimpleName();
 
                         EmotionalPlan emoPlan = (EmotionalPlan) planClass.getAnnotation(EmotionalPlan.class);
+
+                        String simpleName = body.getClazz().getType0().getSimpleName();
+
                         JBDIEmo.UserPlanParams.get(engine.getAgentName()).put(simpleName, emoPlan);
+
+                        System.err.println(" ******* " + mPlan.getElementName() + " " + simpleName + " counted : " + emoPlan.value().length);
 
                         engine.addElement(simpleName, R.PLAN);
                         mPlan.setDescription(simpleName);
@@ -117,9 +121,8 @@ public class AgentModelMapper {
         int goalCount = 0;
 
         for (MGoal mGoal : capability.getGoals()) {
-            try {
 
-                //System.err.println(mGoal.getName());
+            try {
 
                 Class goalClass = Class.forName(mGoal.getElementName());
 
@@ -267,6 +270,8 @@ public class AgentModelMapper {
                 if (mPlan.getCapabilityName() != null) {
                     planName = mPlan.getCapabilityName() + "." + planName;
                 }
+
+                System.err.println(mPlan.getElementName() + " " + planName);
 
                 JBDIEmo.UserPlanParams.get(engine.getAgentName()).put(planName, emoPlan);
 

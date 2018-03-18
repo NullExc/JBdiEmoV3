@@ -2,11 +2,13 @@ package sk.tuke.fei.bdi.emotionalengine.example.hungrypaul;
 
 import jadex.bdiv3.annotation.*;
 import jadex.bdiv3.features.IBDIAgentFeature;
+import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bdiv3.runtime.ChangeEvent;
 import jadex.bdiv3.runtime.IGoal;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
 import jadex.bridge.nonfunctional.annotation.NameValue;
+import jadex.bridge.service.types.chat.IChatService;
 import jadex.micro.annotation.*;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
@@ -56,6 +58,9 @@ public class HungryPaulBDI {
     @Belief
     public Set<EmotionalBelief> food = new HashSet<>();
 
+    @Belief
+    protected EmotionalBelief testBelief = new EmotionalBelief("sokeres");
+
     @Capability
     protected EmotionalCapability capability = new EmotionalCapability();
 
@@ -77,15 +82,13 @@ public class HungryPaulBDI {
     @AgentBody
     public void body() {
 
-
-      //  agentFeature.adoptPlan(new InitializeEmotionalEnginePlan(this)).get();
-
        // agentFeature.dispatchTopLevelGoal(capability.new Translate("")).get();
 
 //        System.err.println(agentAccess.getComponentFeature(BDIMonitoringComponentFeature.class).getCurrentStateEvents().size());
 
-
         execFeature.waitForDelay(5000).get();
+
+       // agentFeature.adoptPlan(capability.new CapaClassPlan()).get();
 
         capability.setBelief(true);
 
@@ -123,6 +126,11 @@ public class HungryPaulBDI {
             }
             return null;
         }
+    }
+
+    @Plan(trigger = @Trigger(factchangeds = "testBelief"))
+    protected void testPlan() {
+        System.err.println("testPlan triggered");
     }
 
     @Belief
