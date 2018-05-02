@@ -5,6 +5,8 @@ import jadex.commons.beans.PropertyChangeSupport;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 
 /**
+ * This class provides support for triggering Change Events of Object Beliefs.
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
@@ -13,7 +15,6 @@ public class JadexBeliefChangeDetectionSupport {
 
     protected PropertyChangeSupport pcs;
     protected boolean propertyChangeHelper;
-    protected EmotionalBelief emotionalBeliefChangeHelper;
 
     /*  Used to notify Jadex of belief changes
         e.g.:
@@ -35,11 +36,21 @@ public class JadexBeliefChangeDetectionSupport {
         this.propertyChangeHelper = propertyChangeHelper;
     }
 
+    /**
+     * Triggers Belief Change event by using PropertyChangeSupport instance.
+     */
     public synchronized void fireBeliefChange() {
         pcs.firePropertyChange("propertyChangeHelper", false, true);
     }
 
-    public synchronized void fireEmotionalBeliefChange(Object oldValue, Object newValue) {
+    /**
+     * Triggers Belief Change event exclusively for EmotionalBelief beliefs. The reason for using this method instead of
+     * 'fireBeliefChange' is, that in case of Emotional Belief we need actual instance after a change.
+     *
+     * @param oldValue old instance of Emotional Belief
+     * @param newValue new instance of Emotional Belief
+     */
+    public synchronized void fireEmotionalBeliefChange(EmotionalBelief oldValue, EmotionalBelief newValue) {
         pcs.firePropertyChange("emotionalBeliefChangeHelper", oldValue, newValue);
     }
 

@@ -2,9 +2,10 @@ package sk.tuke.fei.bdi.emotionalengine.component.emotionalevent;
 
 
 import jadex.bdiv3.runtime.impl.RGoal;
-import sk.tuke.fei.bdi.emotionalengine.component.Engine;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
+import jadex.bdiv3.runtime.impl.RPlan;
+import sk.tuke.fei.bdi.emotionalengine.annotation.EmotionalParameter;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
+import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
@@ -16,6 +17,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Maps emotional parameter values which are used inside of Emotional Events to fire emotions.
+ *
+ * User parameters are these which user specifies in plan of goal definition (e.g. .
+ *
+ * System parameters are intensities of emotions from specific BDI element
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
@@ -30,11 +37,29 @@ public class ParameterValueMapper {
         this.agentClass = agent.getClass();
     }
 
-    public Map<String, Double> getUserParameterValues(EmotionalParameter[] parameters) {
+    /**
+     *
+     * @param plan
+     * @param parameters
+     * @return Set of user parameter values
+     */
+    public Map<String, Double> getUserParameterValues(RPlan plan, EmotionalParameter[] parameters) {
 
         Map<String, Double> userParameters = new HashMap<String, Double>();
 
+        Object object = null;
+
+        Class clazz = null;
+
         for (EmotionalParameter parameter : parameters) {
+
+            if (!parameter.agentClass() && plan != null && plan.getPojoPlan() != null) {
+                object = plan.getPojoPlan();
+                clazz = object.getClass();
+            } else {
+                object = agentObject;
+                clazz = agentClass;
+            }
 
             try {
 
@@ -46,16 +71,16 @@ public class ParameterValueMapper {
 
                 } else if (parameter.target().equals(R.FIELD)) {
 
-                    Field field = agentClass.getDeclaredField(parameter.fieldName());
+                    Field field = clazz.getDeclaredField(parameter.fieldName());
                     field.setAccessible(true);
-                    Double result = (Double) field.get(agentObject);
+                    Double result = (Double) field.get(object);
                     userParameters.put(parameter.parameter(), result);
 
                 } else if (parameter.target().equals(R.METHOD)) {
 
-                    Method method = agentClass.getDeclaredMethod(parameter.methodName());
+                    Method method = clazz.getDeclaredMethod(parameter.methodName());
                     method.setAccessible(true);
-                    Double result = (Double) method.invoke(agentObject);
+                    Double result = (Double) method.invoke(object);
                     userParameters.put(parameter.parameter(), result);
                 }
 
@@ -68,14 +93,17 @@ public class ParameterValueMapper {
             } catch (InvocationTargetException ex) {
                 ex.printStackTrace();
             }
-
         }
-
-     //   System.err.println("User parameters : " + userParameters);
-
         return userParameters;
     }
 
+    /**
+     * Retrieves
+     *
+     * @param goal Runtime representation of Goal
+     * @param parameters Array of emotional parameters
+     * @return Set of system parameter values
+     */
     public Map<String, Double> getGoalUserParameterValues(RGoal goal, EmotionalParameter[] parameters) {
 
         Map<String, Double> userParameters = new HashMap<String, Double>();
@@ -126,55 +154,9 @@ public class ParameterValueMapper {
             } catch (InvocationTargetException ex) {
                 ex.printStackTrace();
             }
-
         }
-
-        //   System.err.println("User parameters : " + userParameters);
-
         return userParameters;
     }
-
-    /*public Map<String, Double> getPlanModelUserParameterValues(Plan parentPlan,MElement elementModel) {
-
-        // Create user parameter objectValue map for emotional event
-        Map<String, Double> userParameters = new HashMap<String, Double>();
-
-        // Check if objectValue model contains any user parameter
-        for (String parameterName : R.EMOTIONAL_PARAMETERS) {
-
-            // Cast objectValue model to plan model
-            MPlan plan = (MPlan) elementModel;
-
-            try {
-
-                // Model parameter expressions don't get final objectValue automatically
-                // (e.g. Math.random() will be just String)
-
-                // Get objectValue of objectValue model parameter as expression
-                IExpression expressionModel; // = plan.getParameter(parameterName).getValue();
-
-                // Create expression from expression model
-                IExpression expression = null; //= parentPlan.createExpression(expressionModel.getText());
-
-                // Get expression objectValue
-                Object parameterValue = expression.execute();
-
-                // If objectValue is valid store parameter and its objectValue
-                if (parameterValue != null) {
-
-                    double parameterValueDouble = Double.parseDouble(String.valueOf(parameterValue));
-                    System.err.println("plan parameter objectValue : " + parameterName + " " + parameterValueDouble);
-                    userParameters.put(parameterName, parameterValueDouble);
-                }
-
-            } catch (Exception e) {
-//                Try catch used because it can't be tested otherwise because Jadex bug where you
-//                can't get parameter array of plan but you can get parameter by name
-            }
-        }
-        return  userParameters;
-    }*/
-
 
     public Map<Integer, Double> getSystemParameterValues(Element element) {
 
@@ -188,21 +170,16 @@ public class ParameterValueMapper {
             Set<Emotion> elementInstanceEmotions = element.getEmotions();
 
             if (elementInstanceEmotions != null && !elementInstanceEmotions.isEmpty()) {
-                for (Emotion emotion : element.getEmotions()) {
+                for (Object emotion : element.getEmotions()) {
 
                     // If objectValue instance contains valid system parameter get its objectValue
-                    if (emotion.getIntensity() != 0) {
+                    if (((Emotion) emotion).getIntensity() != 0) {
 
-                        systemParameters.put(emotion.getEmotionId(), emotion.getIntensity());
-
+                        systemParameters.put(((Emotion) emotion).getEmotionId(), ((Emotion) emotion).getIntensity());
                     }
                 }
             }
-
         }
-
-     //   System.err.println("System parameters : " + systemParameters);
-
         return systemParameters;
     }
 

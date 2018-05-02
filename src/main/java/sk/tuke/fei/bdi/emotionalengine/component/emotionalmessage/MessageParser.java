@@ -5,6 +5,8 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 import java.util.Map;
 
 /**
+ * Provides parsing of Emotional Messages.
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */

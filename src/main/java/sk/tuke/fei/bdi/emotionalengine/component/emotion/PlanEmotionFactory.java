@@ -15,6 +15,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Provides set of emotions related to Plan. The set of emotions is given to emotional Plans.
+ *
+ * Creates instances of these emotions: APPROVING, DISAPPROVING, PRIDE, SHAME, GRATIFICATION, REMORSE, ADMIRATION,
+ * REPROACH, GRATITUDE, ANGER
+ *
  * @author Tomáš Herich
  */
 

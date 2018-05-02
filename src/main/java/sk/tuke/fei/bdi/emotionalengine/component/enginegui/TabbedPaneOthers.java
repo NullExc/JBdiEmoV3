@@ -91,14 +91,10 @@ public class TabbedPaneOthers extends JTabbedPane {
         // Prepare message parser to get needed message parts
         MessageParser message = new MessageParser(receivedMessage);
 
-      //  System.err.println("||||| PROPERTY CHANGE MESSAGE  ||||| " + receivedMessage);
-
         // Iterate local component set
         for (JScrollPane agentPane : agentPanes) {
 
             String simpleName = agentPane.getName().split("@")[0];
-
-         //   System.err.println("||||| agentPane " + simpleName + " Sender agent : " + message.getSender());
 
             // If local component name match message sender
             if (simpleName.equals(message.getSender())) {

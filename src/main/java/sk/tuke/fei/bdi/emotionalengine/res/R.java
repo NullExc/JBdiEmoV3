@@ -30,14 +30,14 @@ public class R {
     public final static String KEY_SENDER_ID = "key_sender_id";
     public final static String KEY_PLAN_NAME = "key_plan_name";
 
-    // BDIV2 emotional parameter attribute keys
-    public final static String FIELD = "v2_field_target";
-    public final static String METHOD = "v2_method_target";
-    public final static String BOOLEAN = "v2_simple_boolean";
-    public final static String STRING = "v2_simple_string";
-    public final static String DOUBLE = "v2_simple_double";
+    // BDIV3 emotional parameter attribute keys
+    public final static String FIELD = "field_target";
+    public final static String METHOD = "method_target";
+    public final static String BOOLEAN = "simple_boolean";
+    public final static String STRING = "simple_string";
+    public final static String DOUBLE = "simple_double";
 
-    //BDIV2
+    public final static String INIT_PLAN = "initial_plan";
 
     // -------------------------------------------------------------------------------
     // Emotional engine, Emotional objectValue types, Emotional event types
@@ -137,6 +137,7 @@ public class R {
     public final static String PARAM_EMOTIONAL_OTHER = "emotional_other";
     public final static String PARAM_EMOTIONAL_OTHER_GROUP = "emotional_other_group";
     public final static String PARAM_EMOTIONAL_OTHER_PLAN = "emotional_other_plan";
+    public final static String PARAM_EMOTIONAL_OTHER_PLAN_TRIGGER = "emotional_other_plan_trigger";
 
 
     // Emotional parameter types holder
@@ -194,6 +195,7 @@ public class R {
     public static final String MESSAGE_RESULT_FAILURE = "failure";
     public static final String MESSAGE_DELIMITER = "|";
     public static final String MESSAGE_DELIMITER_REGEXP = "\\|";
+    public static final String DELIMITER = ",";
 
 
     // -------------------------------------------------------------------------------

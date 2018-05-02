@@ -11,6 +11,8 @@ package sk.tuke.fei.bdi.emotionalengine.component.enginegui;
    
 */
 
+import jadex.commons.beans.PropertyChangeEvent;
+import jadex.commons.beans.PropertyChangeListener;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.helper.MyMath;
@@ -20,10 +22,6 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-//import java.beans.PropertyChangeEvent;
-//import java.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeEvent;
 
 public class EngineGui extends JFrame implements ActionListener {
 

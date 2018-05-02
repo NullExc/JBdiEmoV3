@@ -9,13 +9,21 @@ import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.result.ResultNul
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.result.ResultSuccessChecker;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.system.SystemFearChecker;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.system.SystemHopeChecker;
-import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user.*;
+import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user.UserDesirabilityChecker;
+import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user.UserOtherDesireGoalFailure;
+import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user.UserOtherDesireGoalSuccess;
+import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.user.UserProbabilityChecker;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /**
+ * Provides set of emotions related to Goal. The set of emotions is given to emotional Goals.
+ *
+ * Creates instances of these emotions: PLEASED, DISPLEASED, HOPE, FEAR, JOY, DISTRESS, RELIEF, FEAR_CONFIRMED,
+ * SATISFACTION, DISAPPOINTMENT, HAPPY FOR, RESENTMENT, GLOATING, PITY
+ *
  * @author Tomáš Herich
  */
 

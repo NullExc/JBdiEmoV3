@@ -1,7 +1,6 @@
 package sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage;
 
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
-import jadex.bdiv3.model.BDIModel;
 import jadex.bdiv3.model.MCapability;
 import jadex.bdiv3.model.MPlan;
 import jadex.bridge.IComponentIdentifier;
@@ -9,49 +8,38 @@ import jadex.bridge.IInternalAccess;
 import jadex.bridge.service.search.SServiceProvider;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.IResultListener;
+import sk.tuke.fei.bdi.emotionalengine.annotation.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.ParameterValueMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
+import sk.tuke.fei.bdi.emotionalengine.component.service.ICommunicationService;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
-import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
+ *
+ * MessageCenter class provides functionality to send and receive emotional messages.
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
 
 public class MessageCenter {
 
-    private IInternalAccess access = null;
+    private IInternalAccess access;
     private final Engine engine;
     private final MCapability capability;
     private final ParameterValueMapper params;
 
-    public MessageCenter(Object agent) {
+    public MessageCenter(IInternalAccess access) {
 
-
-        if (agent instanceof IInternalAccess) {
-
-            this.access = (IInternalAccess) agent;
-
-        } else {
-
-            try {
-                this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
-            } catch (JBDIEmoException e) {
-                e.printStackTrace();
-            }
-
-        }
+        this.access = access;
 
         this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class).getBDIModel().getCapability().getBelief("engine").getValue(access);
 
@@ -60,9 +48,19 @@ public class MessageCenter {
         params = new ParameterValueMapper(engine.getAgentObject());
     }
 
-    public void sendEmotionalMessage(String planName, int eventType, int resultType) {
+    /**
+     * Represents functionality of sending emotional message. Creates message in form of Map object with specific
+     * attributes for receiver. Retrieves instance of ICommunicationService service for each receiver and calls its method
+     * to start receiving process.
+     *
+     * @param planName Name of plan which has triggered a event.
+     * @param eventType Type of triggered event. Possible values: R.EVT_PLAN_CREATED, R.EVT_PLAN_FINISHED
+     * @param resultType Information about result of plan execution. Result can be 'success' or 'failure' in case of 'finished' event
+     *                   or NULL in case of 'created' event.
+     */
+    public void sendEmotionalMessage(final String planName, int eventType, int resultType) {
 
-        String messageEventType;
+        final String messageEventType;
         if (eventType == R.EVT_PLAN_CREATED) {
             messageEventType = R.MESSAGE_PLAN_CREATED;
         } else {
@@ -70,7 +68,7 @@ public class MessageCenter {
         }
 
         // Convert engine result info to message result info format
-        String messageResultType;
+        final String messageResultType;
         if (resultType == R.RESULT_NULL) {
             messageResultType = R.MESSAGE_RESULT_NULL;
         } else if (resultType == R.RESULT_SUCCESS) {
@@ -79,14 +77,20 @@ public class MessageCenter {
             messageResultType = R.MESSAGE_RESULT_FAILURE;
         }
 
-        for (IComponentIdentifier serviceCid : engine.getEmotionalOtherIds()) {
+        for (final IComponentIdentifier serviceCid : engine.getEmotionalOtherIds()) {
 
-            IFuture<ICommunicationService> service = SServiceProvider.getService(access.getExternalAccess(), serviceCid, ICommunicationService.class);
+            final IFuture<ICommunicationService> service = SServiceProvider.getService(access.getExternalAccess(), serviceCid, ICommunicationService.class);;
 
             service.addResultListener(new IResultListener<ICommunicationService>() {
                 @Override
                 public void exceptionOccurred(Exception exception) {
-                    exception.printStackTrace();
+                    //exception.printStackTrace();
+                    try {
+                        throw new JBDIEmoException("ICommunicationService is not provided by '"
+                                + serviceCid.getLocalName() + "'");
+                    } catch (JBDIEmoException e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 @Override
@@ -118,7 +122,14 @@ public class MessageCenter {
         }
     }
 
-    public void recieveMessages(Map<String, String> receivedMessage) {
+    /**
+     * Represents functionality of receiving emotional message. Uses MessageParser class to retrieve its attributes and tries
+     * to find plan of a receiver, which reacts on sender plan. If it finds a match, Emotional Event is created and processed.
+     *
+     * @param receivedMessage Represents emotional message to receive. Contains this attributes : Name of plan, event type,
+     * result type and sender name
+     */
+    public void receiveEmotionalMessage(Map<String, String> receivedMessage) {
 
         // Assign message event to message parser
         MessageParser message = new MessageParser(receivedMessage);
@@ -207,9 +218,6 @@ public class MessageCenter {
         // Check if element is valid
         if (element != null) {
 
-            //System.err.println(engine.getElements(R.PLAN).length + engine.getAgentName() + " " +
-            //        otherPlanModel.getDescription() + " " + (element == null));
-
             // Create emotional event
             EmotionalEvent emotionalEvent = new EmotionalEvent();
 
@@ -233,7 +241,7 @@ public class MessageCenter {
 
             // Map emotional other agent plan defined in this agent ADF for user parameters
             Map<String, Double> userParameters = params
-                    .getUserParameterValues(JBDIEmo.UserPlanParams.get(engine.getAgentName()).get(otherPlanModel.getDescription()).value());  //params.getPlanModelUserParameterValues(otherPlanModel);
+                    .getUserParameterValues(null, JBDIEmo.UserPlanParams.get(engine.getAgentName()).get(otherPlanModel.getDescription()).value());  //params.getPlanModelUserParameterValues(otherPlanModel);
 
             // Add special user parameters which signify that this is plan of emotional other agent
             userParameters.put(R.PARAM_EMOTIONAL_OTHER, 1.0d);

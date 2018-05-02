@@ -3,15 +3,39 @@ package sk.tuke.fei.bdi.emotionalengine.belief;
 import sk.tuke.fei.bdi.emotionalengine.component.JadexBeliefChangeDetectionSupport;
 
 /**
+ *
+ * Instances of the class EmotionalBelief represents emotional Beliefs.
+ *
+ * Emotional Belief contains three emotional parameters: isFamiliar, isAttractive and attractionIntensity. Values of this
+ * parameters affect intensity of emotions, which are assigned to Belief Elements.
+ *
+ * EmotionalBelief can be either parent (BeliefSet) or child Belief. In case of child, Belief has to specify his parent in
+ * constructor.
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
 public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
 
+    /**
+     *  Name of Belief or BeliefSet
+     */
     private String name;
+    /**
+     *  Name of parent (BeliefSet), in case that Belief is a child
+     */
     private String parent;
+    /**
+     *  Emotional Parameter of Emotional Belief
+     */
     private boolean isFamiliar;
+    /**
+     *  Emotional Parameter of Emotional Belief
+     */
     private boolean isAttractive;
+    /**
+     * Emotional Parameter of Emotional Belief
+     */
     private double attractionIntensity;
 
     public EmotionalBelief(String name) {
@@ -65,7 +89,7 @@ public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
     /**
      * Get attraction intensity property value
      *
-     * @return Intensity double value always belongs to interval &lt;0,1>
+     * @return Intensity double value always belongs to interval {0-1}
      */
     public Double getAttractionIntensity() {
         return attractionIntensity;
@@ -74,7 +98,7 @@ public class EmotionalBelief extends JadexBeliefChangeDetectionSupport {
     /**
      * Update EmotionalBelief property values and fire belief change event.
      * You can set values you want to change or NULL in case you want to preserve original values.
-     * Value of attraction intensity belongs to interval &lt;0,1> so even if you set different value
+     * Value of attraction intensity belongs to interval {0,1} so even if you set different value
      * it will be set to interval min or max.
      *
      * @param familiar set familiarity (boolean), or NULL when you don't want to change original property value

@@ -7,6 +7,10 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Represents emotional event. The event is created when emotional element's state was updated.
+ *
+ * Contains attributes for eliciting emotion conditions.
+ *
  * @author Tomáš Herich
  */
 

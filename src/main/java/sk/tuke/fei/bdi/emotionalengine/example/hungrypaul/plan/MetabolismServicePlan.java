@@ -9,9 +9,6 @@ import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.HungryPaulBDI;
 import sk.tuke.fei.bdi.emotionalengine.example.hungrypaul.belief.Hunger;
 import sk.tuke.fei.bdi.emotionalengine.helper.MyMath;
 
-/**
- * Created by PeterZemianek on 5/14/2017.
- */
 @Plan
 public class MetabolismServicePlan {
 
@@ -39,7 +36,6 @@ public class MetabolismServicePlan {
     @PlanBody
     public void body() {
 
-        System.err.println("Metabolism plan starts");
 
         while (true) {
 
@@ -49,14 +45,8 @@ public class MetabolismServicePlan {
 
             if (hunger + 0.02 <= 1) {
                 hunger = hunger + 0.02;
-
-             //   System.out.println("MetabolismServicePlan : " + hunger);
-
                 paulBDI.setHunger(new Hunger(hunger));
-                //hungerBelief = new Hunger(hunger);
-                //model.getCapability().getBelief("hunger").setValue(agentAccess, new Hunger(hunger));
             }
-
 
             String selectedHungerLevel;
 
@@ -97,7 +87,5 @@ public class MetabolismServicePlan {
 
             }
         }
-
-
     }
 }

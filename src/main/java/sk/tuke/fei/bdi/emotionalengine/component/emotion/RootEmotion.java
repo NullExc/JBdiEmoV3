@@ -7,6 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ *  Represents Emotions which are on the top level of OCCr emotion hierarchy.
+ *
  * @author Tomáš Herich
  */
 

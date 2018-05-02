@@ -14,6 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
+ * Represents general functionality of all emotions. Takes care of intensity process, checking emotional event conditions,...
+ *
  * @author Tomáš Herich
  */
 
@@ -80,7 +82,7 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
      * Set new emotion intensity element.
      * Method is called by new emotional intensity element
      * calculation. Method ensures trimming
-     * of element so it belongs to <0,1> interval.
+     * of element so it belongs to {0,1} interval.
      * Method fireBeliefChange() from JadexBeliefChangeDetectionSupport
      * class is called to notify Jadex that Engine belief
      * was changed.
@@ -91,7 +93,7 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
 
         intensity = intensity + newIntensity;
 
-        // Intensity must belong to interval <0,1>
+        // Intensity must belong to interval {0,1}
         if (intensity > 1) {
             intensity = 1;
         }
@@ -304,7 +306,6 @@ public abstract class Emotion extends JadexBeliefChangeDetectionSupport {
         // 1 / (1 + (e ^ ((x - 0.5 * 100) / (0.1 * 100)))
 
         double decayedIntensity = decaySourceIntensity * (1 / (1 + (Math.pow(Math.E, (decayStep - coef1) / coef2))));
-
 
         // Fixed decrement used to kill emotions that are near the end of sigmoid function (y near 0)
         decayedIntensity = Math.max(0.0, decayedIntensity - 0.0005);

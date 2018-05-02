@@ -7,10 +7,11 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="jadex-example-project" />
+        <module name="JBDIEmoV3" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel target="1.8">
-      <module name="jadex-example-project" target="1.8" />
+      <module name="JBDIEmoV3" target="1.8" />
     </bytecodeTargetLevel>
   </component>
 </project>

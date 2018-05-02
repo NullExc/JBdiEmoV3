@@ -11,6 +11,8 @@ package sk.tuke.fei.bdi.emotionalengine.component.enginegui;
    
 */
 
+import jadex.commons.beans.PropertyChangeEvent;
+import jadex.commons.beans.PropertyChangeListener;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
@@ -19,11 +21,10 @@ import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.*;
+
 //import java.beans.PropertyChangeEvent;
 //import java.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeListener;
-import jadex.commons.beans.PropertyChangeEvent;
-import java.util.*;
 
 public class ContentPanelEmotion extends JPanel {
 

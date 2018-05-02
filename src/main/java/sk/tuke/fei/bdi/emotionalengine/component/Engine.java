@@ -13,9 +13,10 @@ import java.util.*;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
+ * Represents core of the JBDIEmo. It's responsible for decaying intensity of emotions, holds emotional elements and so on.
+ *
  * @author Tomáš Herich
  */
-
 public class Engine extends JadexBeliefChangeDetectionSupport implements Runnable {
 
     private String agentName;

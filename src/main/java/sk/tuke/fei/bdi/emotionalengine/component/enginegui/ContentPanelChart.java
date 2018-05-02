@@ -22,15 +22,14 @@ import org.jfree.data.time.DynamicTimeSeriesCollection;
 import org.jfree.data.time.Second;
 import org.jfree.ui.RectangleInsets;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
-import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotion.Emotion;
 
 import javax.swing.*;
-import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.Date;
+import java.util.Set;
 
 public class ContentPanelChart extends JPanel {
 

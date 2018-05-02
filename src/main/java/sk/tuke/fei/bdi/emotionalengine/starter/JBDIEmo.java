@@ -2,28 +2,29 @@ package sk.tuke.fei.bdi.emotionalengine.starter;
 
 import jadex.base.PlatformConfiguration;
 import jadex.base.Starter;
-import jadex.bdiv3.features.IBDIAgentFeature;
-import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
 import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.IExternalAccess;
+import jadex.bridge.modelinfo.IModelInfo;
 import jadex.bridge.service.search.SServiceProvider;
 import jadex.bridge.service.types.cms.IComponentManagementService;
 import jadex.commons.future.IFuture;
 import jadex.commons.future.ITuple2Future;
-import jadex.micro.annotation.Configuration;
+import org.reflections.Reflections;
+import sk.tuke.fei.bdi.emotionalengine.annotation.EmotionalGoal;
+import sk.tuke.fei.bdi.emotionalengine.annotation.EmotionalParameter;
+import sk.tuke.fei.bdi.emotionalengine.annotation.EmotionalPlan;
 import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalGoal;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalParameter;
-import sk.tuke.fei.bdi.emotionalengine.parser.annotations.EmotionalPlan;
-import sk.tuke.fei.bdi.emotionalengine.service.ICommunicationService;
+import sk.tuke.fei.bdi.emotionalengine.res.R;
 
 import java.lang.reflect.Field;
-import java.util.*;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
- * @author Peter Zemianek
- *
  * Controller of JBdiEmo engine.
+ *
+ * @author Peter Zemianek
  */
 public class JBDIEmo {
 
@@ -37,6 +38,9 @@ public class JBDIEmo {
      */
     public static  Map<String, Map<String, EmotionalGoal>> UserGoalParams = new LinkedHashMap<>();
 
+    /**
+     * PLATFORM, which can be used to retrieve global services.
+     */
     public static IExternalAccess PLATFORM = null;
 
     public JBDIEmo() {
@@ -46,20 +50,32 @@ public class JBDIEmo {
     /**
      * Function called by user to start Jadex.
      * @param agents Map object containing Key-Value pair
+     * @param platform Platform provided by user. If Null, Platform will be created with default settings
+     * @param rootPackage Name of root package of all emotional agents.
      * Key is Agent's name in JBdiEmo engine
      * Value is Agent's full class path
      * Example : Map.put("HelloAgent", "com.example.main.HelloAgentBDI.class")
      */
-    public static void start(Map<String, String> agents) {
+    public static void start(Map<String, String> agents, IExternalAccess platform, String rootPackage) throws JBDIEmoException {
 
-        PlatformConfiguration configuration = PlatformConfiguration.getDefaultNoGui();
+        Reflections reflections = new Reflections(rootPackage);
 
-        IFuture<IExternalAccess> fut = Starter.createPlatform(configuration);
-        IExternalAccess platform = fut.get();
+        reflections.getTypesAnnotatedWith(EmotionalPlan.class);
 
-        PLATFORM = platform;
+        reflections.getTypesAnnotatedWith(EmotionalGoal.class);
 
-        IFuture<IComponentManagementService> future = SServiceProvider.getService(platform, IComponentManagementService.class);
+        PlatformConfiguration configuration = null;
+
+        if (platform == null) {
+            configuration = PlatformConfiguration.getDefaultNoGui();
+
+            PLATFORM = Starter.createPlatform(configuration).get();
+
+        } else {
+            PLATFORM = platform;
+        }
+
+        IFuture<IComponentManagementService> future = SServiceProvider.getService(PLATFORM, IComponentManagementService.class);
 
         IComponentManagementService cms = future.get();
 
@@ -76,16 +92,16 @@ public class JBDIEmo {
 
             IComponentIdentifier cid =  fut_cid.getFirstResult();
 
-            System.out.println("Started component: " + cid);
+            IModelInfo modelInfo = SServiceProvider.getService(PLATFORM, IComponentManagementService.class).get()
+                    .getExternalAccess(cid).get().getModel();
 
-            //Object feature = SServiceProvider.getService(cms.getExternalAccess(cid).get(), Configuration.class).get();
+            if (modelInfo.getConfiguration(R.INIT_PLAN) == null) {
+                throw new JBDIEmoException("The agent '" + cid.getLocalName() +
+                        "' hasn't InitializeEmotionalEnginePlan. Pleas add this plan to the BDI Configuration.");
+            }
 
-          //  System.err.println("feature " + feature);
+            System.out.println("Started component : " + cid.getLocalName());
         }
-
-       // IComponentIdentifier[] childrens = platform.getChildren()
-
-
     }
 
     /**

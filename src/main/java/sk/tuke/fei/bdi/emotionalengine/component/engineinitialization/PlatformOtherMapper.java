@@ -1,13 +1,17 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
-import jadex.bdiv3.model.BDIModel;
+import jadex.bridge.IComponentIdentifier;
 import jadex.bridge.IComponentStep;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IExecutionFeature;
-import jadex.bridge.service.component.IRequiredServicesFeature;
 import jadex.bridge.service.search.SServiceProvider;
+import jadex.bridge.service.types.cms.IComponentManagementService;
+import jadex.commons.future.IFuture;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
+import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
+
+import java.util.Set;
 
 /*
 
@@ -20,15 +24,11 @@ import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 
 */
 
-import jadex.bridge.IComponentIdentifier;
-import jadex.bridge.service.types.cms.IComponentManagementService;
-import jadex.commons.future.IFuture;
-import sk.tuke.fei.bdi.emotionalengine.res.R;
-import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
-
-import java.util.Set;
-
 /**
+ *
+ * Periodically looks for other agents in platform. If finds someone, then it adds its identifier into Engine.
+ * This identifiers are used in communication process.
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
@@ -38,14 +38,12 @@ public class PlatformOtherMapper {
     private Set<String> emotionalOtherNames;
 
     private boolean isRunning = false;
-    private final IInternalAccess access;
     private final Engine engine;
     private final IExecutionFeature executionFeature;
 
     public PlatformOtherMapper(IInternalAccess access) {
         this.engine = (Engine) access.getComponentFeature(IInternalBDIAgentFeature.class)
                 .getBDIModel().getCapability().getBelief("engine").getValue(access);
-        this.access = access;
         this.executionFeature = access.getComponentFeature(IExecutionFeature.class);
 
         map();
@@ -75,7 +73,7 @@ public class PlatformOtherMapper {
 
                         for (String emotionalOtherName : getEmotionalOtherNames()) {
 
-                            if (componentName.matches(emotionalOtherName + ".*")) {
+                            if (componentName.matches(emotionalOtherName)) {
                                 isComponentEmotionalOther = true;
                             }
                         }

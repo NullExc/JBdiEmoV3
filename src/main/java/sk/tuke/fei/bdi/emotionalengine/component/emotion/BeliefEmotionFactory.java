@@ -13,6 +13,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
+ *
+ * Provides set of emotions related to Belief. The set of emotions is given to a Element instance of emotional Beliefs.
+ *
+ * Creates instances of these emotions: LIKING, DISLIKING, LOVE, HATE, INTEREST, DISGUST
+ *
+ *
+ *
  * @author Tomáš Herich
  */
 

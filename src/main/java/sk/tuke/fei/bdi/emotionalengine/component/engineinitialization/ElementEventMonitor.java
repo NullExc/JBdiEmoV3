@@ -1,29 +1,22 @@
 package sk.tuke.fei.bdi.emotionalengine.component.engineinitialization;
 
 import jadex.bdiv3.features.IBDIAgentFeature;
-import jadex.bdiv3.features.impl.BDIAgentFeature;
 import jadex.bdiv3.features.impl.IInternalBDIAgentFeature;
-import jadex.bdiv3.model.BDIModel;
-import jadex.bdiv3.model.MGoal;
-import jadex.bdiv3.model.MParameter;
 import jadex.bdiv3.runtime.IBeliefListener;
 import jadex.bdiv3.runtime.IGoal;
 import jadex.bdiv3.runtime.impl.*;
-import jadex.bdiv3x.runtime.IParameter;
 import jadex.bridge.IInternalAccess;
 import jadex.bridge.component.IMonitoringComponentFeature;
 import jadex.bridge.service.types.monitoring.IMonitoringEvent;
 import jadex.bridge.service.types.monitoring.IMonitoringService;
 import jadex.commons.IFilter;
 import jadex.rules.eca.ChangeInfo;
-import org.spongycastle.math.ec.ScaleYPointMap;
 import sk.tuke.fei.bdi.emotionalengine.belief.EmotionalBelief;
 import sk.tuke.fei.bdi.emotionalengine.component.Element;
 import sk.tuke.fei.bdi.emotionalengine.component.Engine;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.EmotionalEvent;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalevent.ParameterValueMapper;
 import sk.tuke.fei.bdi.emotionalengine.component.emotionalmessage.MessageCenter;
-import sk.tuke.fei.bdi.emotionalengine.component.exception.JBDIEmoException;
 import sk.tuke.fei.bdi.emotionalengine.res.R;
 import sk.tuke.fei.bdi.emotionalengine.starter.JBDIEmo;
 
@@ -31,6 +24,13 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
+ * Monitors events of all emotional elements. It uses IMonitoringComponentFeature for this purpose.
+ *
+ * Listens for these events:
+ *  Belief: CHANGED
+ *  PLAN: CREATED, FINISHED
+ *  GOAL: CREATED, FINISHED
+ *
  * @author Tomáš Herich
  * @author Peter Zemianek
  */
@@ -38,8 +38,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ElementEventMonitor {
 
     private Engine engine;
-    private IInternalAccess access;
+    /**
+     * Map of activeGoals. Created/Finished goals are checked if they are in this Map.
+     */
     private Map<String, IGoal> myActiveGoals = Collections.synchronizedMap(new ConcurrentHashMap<String, IGoal>());
+    /**
+     * Map of activePlans. Created/Finished plans are checked if they are in this Map.
+     */
     private Map<String, Object[]> myActivePlans = Collections.synchronizedMap(new ConcurrentHashMap<String, Object[]>());
 
     private final IInternalBDIAgentFeature internalFeature;
@@ -50,13 +55,7 @@ public class ElementEventMonitor {
 
     private List<EmotionalBelief> facts = new ArrayList<>();
 
-    public ElementEventMonitor(Object agent, MessageCenter center) {
-
-        try {
-            this.access = JBDIEmo.findAgentComponent(agent, IInternalAccess.class);
-        } catch (JBDIEmoException e) {
-            e.printStackTrace();
-        }
+    public ElementEventMonitor(IInternalAccess access, Object agent, MessageCenter center) {
 
         this.monitor = access.getComponentFeature(IMonitoringComponentFeature.class);
 
@@ -91,21 +90,10 @@ public class ElementEventMonitor {
 
                     AbstractBDIInfo bdiInfo = (AbstractBDIInfo) properties.get("details");
 
-                    //System.out.println(bdiInfo);
-
                     if (bdiInfo instanceof PlanInfo) {
                         handlePlanEvent((PlanInfo) bdiInfo);
                     } else if (bdiInfo instanceof GoalInfo) {
                         handleGoalEvent((GoalInfo) bdiInfo);
-                    } else if (bdiInfo instanceof BeliefInfo) {
-                        BeliefInfo beliefInfo = (BeliefInfo) bdiInfo;
-
-                        //System.err.println("BeliefInfo activated! " + beliefInfo);
-
-                        if (beliefInfo.getValue() instanceof Collection) {
-                            Object object = beliefInfo.getValue();
-                            //System.err.println("Value of List! " + beliefInfo);
-                        }
                     }
                 }
                 return true;
@@ -113,9 +101,10 @@ public class ElementEventMonitor {
         }, true, IMonitoringService.PublishEventLevel.FINE);
     }
 
+    /**
+     * @param planInfo Information about plan based event.
+     */
     public void handlePlanEvent(PlanInfo planInfo) {
-
-       // System.err.println(planInfo);
 
         String[] planNames = engine.getElementsNames(R.PLAN);
 
@@ -137,11 +126,11 @@ public class ElementEventMonitor {
         }
     }
 
+    /**
+     *
+     * @param goalInfo Information about goal based event.
+     */
     public void handleGoalEvent(GoalInfo goalInfo) {
-
-        //System.err.println(Arrays.toString(goalNames));
-
-        //System.err.println(goalInfo);
 
         String[] goalNames = engine.getElementsNames(R.GOAL);
 
@@ -206,7 +195,7 @@ public class ElementEventMonitor {
                     emotionalEvent.setElementName(description);
                     emotionalEvent.setEventType(R.EVT_PLAN_CREATED);
                     emotionalEvent.setResultType(R.RESULT_NULL);
-                    emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams
+                    emotionalEvent.setUserParameters(params.getUserParameterValues(plan, JBDIEmo.UserPlanParams
                             .get(engine.getAgentName()).get(description).value()));
                     emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
@@ -270,7 +259,7 @@ public class ElementEventMonitor {
                 emotionalEvent.setElementName(elementName);
                 emotionalEvent.setEventType(R.EVT_PLAN_FINISHED);
                 emotionalEvent.setResultType(planResult);
-                emotionalEvent.setUserParameters(params.getUserParameterValues(JBDIEmo.UserPlanParams.get(engine.getAgentName())
+                emotionalEvent.setUserParameters(params.getUserParameterValues(plan, JBDIEmo.UserPlanParams.get(engine.getAgentName())
                         .get(plan.getModelElement().getDescription()).value()));
                 emotionalEvent.setSystemParameters(systemParams);
 
@@ -302,8 +291,7 @@ public class ElementEventMonitor {
                     myActiveGoals.put(goal.toString(), goal);
 
                     // Get objectValue
-
-                    Element objectValue = engine.getElement(description, R.GOAL);
+                    Element element = engine.getElement(description, R.GOAL);
 
                     // Create emotional event
                     EmotionalEvent emotionalEvent = new EmotionalEvent();
@@ -314,10 +302,10 @@ public class ElementEventMonitor {
                     emotionalEvent.setResultType(R.RESULT_NULL);
                     emotionalEvent.setUserParameters(params.getGoalUserParameterValues(goal, JBDIEmo.UserGoalParams
                             .get(engine.getAgentName()).get(description).value()));
-                    emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
+                    emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
                     // Fire emotional event
-                    objectValue.processEmotionalEvent(emotionalEvent);
+                    element.processEmotionalEvent(emotionalEvent);
                 }
             }
         }
@@ -354,7 +342,7 @@ public class ElementEventMonitor {
 
                 // Get objectValue
                 String elementName = goal.getModelElement().getDescription();
-                Element objectValue = engine.getElement(elementName, R.GOAL);
+                Element element = engine.getElement(elementName, R.GOAL);
 
                 // Create emotional event
                 EmotionalEvent emotionalEvent = new EmotionalEvent();
@@ -373,10 +361,10 @@ public class ElementEventMonitor {
                 emotionalEvent.setResultType(goalResult);
                 emotionalEvent.setUserParameters(params.getGoalUserParameterValues((RGoal) goal, JBDIEmo.UserGoalParams
                         .get(engine.getAgentName()).get(elementName).value()));
-                emotionalEvent.setSystemParameters(params.getSystemParameterValues(objectValue));
+                emotionalEvent.setSystemParameters(params.getSystemParameterValues(element));
 
                 // Fire emotional event
-                objectValue.processEmotionalEvent(emotionalEvent);
+                element.processEmotionalEvent(emotionalEvent);
             }
         }
     }
@@ -421,8 +409,6 @@ public class ElementEventMonitor {
         String elementName = emotionalBelief.getName();
         Element element = engine.getElement(elementName, R.BELIEF);
 
-        System.err.println(elementName + " " + element);
-
         // Create emotional event
         EmotionalEvent emotionalEvent = new EmotionalEvent();
 
@@ -453,17 +439,23 @@ public class ElementEventMonitor {
 
                     @Override
                     public void beliefChanged(ChangeInfo<Object> changeInfo) {
-                        System.out.println("change" + changeInfo);
                     }
 
                     @Override
                     public void factAdded(ChangeInfo<Object> changeInfo) {
 
-                        if (changeInfo.getValue() instanceof EmotionalBelief) {
+                        EmotionalBelief emotionalBelief = null;
+
+                        if (changeInfo.getValue() == null && changeInfo.getOldValue() instanceof  EmotionalBelief) {
+                            emotionalBelief = (EmotionalBelief) changeInfo.getOldValue();
+
+                        } else if (changeInfo.getValue() instanceof EmotionalBelief) {
+                            emotionalBelief = (EmotionalBelief) changeInfo.getValue();
+                        }
+
+                        if (emotionalBelief != null) {
 
                             boolean delete = false;
-
-                            EmotionalBelief emotionalBelief = (EmotionalBelief) changeInfo.getValue();
 
                             for (EmotionalBelief fact: facts) {
                                 if (fact.equals(emotionalBelief)) {
